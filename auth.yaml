@@ -1,0 +1,16 @@
+---
+apiVersion: ambassador/v0
+kind: Mapping
+name: my_service_mapping
+prefix: /my_service/
+service: my-service-http:3000
+---
+apiVersion: ambassador/v0
+kind:  Module
+name:  authentication
+config:
+  auth_service: "example-jwt-auth:3000"
+  path_prefix: "/auth"
+  allowed_headers:
+  - "x-jwt-payload"
+

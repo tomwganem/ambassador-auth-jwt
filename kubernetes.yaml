@@ -18,7 +18,7 @@ spec:
   ports:
   - port: 3000
     name: http-example-auth
-    targetPort: http-api
+    targetPort: 3000
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
