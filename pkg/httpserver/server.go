@@ -4,22 +4,20 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/gorilla/mux"
+	"github.com/kminehart/ambassador-auth-jwt/pkg/token"
 )
 
 type Server struct {
-	Router *mux.Router
 	Secret string
 }
 
 func (this *Server) Start(port int) error {
-	return http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", port), this.Router)
+	http.HandleFunc("/", token.DecodeHttpHandler)
+	return http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", port), nil)
 }
 
 func NewServer(secret string) *Server {
-	router := GetRouter()
 	return &Server{
 		Secret: secret,
-		Router: router,
 	}
 }

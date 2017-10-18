@@ -28,7 +28,7 @@ func init() {
 	}
 
 	JwtSecret = os.Getenv("JWT_SECRET")
-	JwtCookieName = os.Getenv("JWT_SECRET")
+	JwtCookieName = os.Getenv("JWT_COOKIE_NAME")
 	JwtOutboundHeader = os.Getenv("JWT_OUTBOUND_HEADER")
 	checkExp := os.Getenv("CHECK_EXP")
 
@@ -49,8 +49,15 @@ func init() {
 	}
 
 	token.JwtSecret = JwtSecret
-	token.JwtCookieName = JwtCookieName
-	token.JwtOutboundHeader = JwtOutboundHeader
+
+	// Optional envs
+	if JwtCookieName != "" {
+		token.JwtCookieName = JwtCookieName
+	}
+	if JwtOutboundHeader != "" {
+		token.JwtOutboundHeader = JwtOutboundHeader
+	}
+
 	token.JwtCheckExp = CheckExp
 }
 

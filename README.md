@@ -13,5 +13,8 @@ Provide the following environment variables:
 | name | description | default value |
 |------|-------------|---------------|
 | `JWT_SECRET` | The secret used to encode / decode the JWT | |
+| `JWT_COOKIE_NAME` | | |
+| `JWT_OUTBOUND_HEADER` | | |
+| `CHECK_EXP` | | |
 
 ## Run on Kubernetes
