@@ -24,6 +24,7 @@ Take a look at the [`kubernetes.yaml`](kubernetes.yaml) file provided and modify
 ```
 kubectl apply -f kubernetes.yaml
 ```
+**note:** it is very crucial that you set a much stronger secret before deploying this to production.
 
 ## Ambassador
 
