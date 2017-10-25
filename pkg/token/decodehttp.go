@@ -40,7 +40,6 @@ func DecodeHttpHandler(w http.ResponseWriter, r *http.Request) {
 	mapClaims, err := Decode(jwt, JwtSecret)
 	if err != nil {
 		logger.Printf("[%s] [%s] [%s %s] %s\n", r.RemoteAddr, r.Host, r.Method, r.RequestURI, err.Error())
-		http.Error(w, err.Error(), 401)
 		return
 	}
 
@@ -48,14 +47,12 @@ func DecodeHttpHandler(w http.ResponseWriter, r *http.Request) {
 		// Make sure the exp is before today...
 		if _, ok := mapClaims["exp"]; ok != true {
 			logger.Printf("[%s] [%s] [%s %s] %s\n", r.RemoteAddr, r.Host, r.Method, r.RequestURI, err.Error())
-			http.Error(w, err.Error(), 401)
 			return
 		}
 
 		exp, err := time.Parse(time.RFC3339, mapClaims["exp"].(string))
 		if err != nil {
 			logger.Printf("[%s] [%s] [%s %s] %s\n", r.RemoteAddr, r.Host, r.Method, r.RequestURI, err.Error())
-			http.Error(w, err.Error(), 401)
 			return
 		}
 
@@ -64,7 +61,6 @@ func DecodeHttpHandler(w http.ResponseWriter, r *http.Request) {
 
 		if exp.Before(now) {
 			logger.Printf("[%s] [%s] [%s %s] %s\n", r.RemoteAddr, r.Host, r.Method, r.RequestURI, "Token is expired")
-			http.Error(w, "This token is expired", 401)
 			return
 		}
 	}
@@ -73,7 +69,6 @@ func DecodeHttpHandler(w http.ResponseWriter, r *http.Request) {
 	payload, err := json.Marshal(mapClaims)
 	if err != nil {
 		logger.Printf("[%s] [%s] [%s %s] %s\n", r.RemoteAddr, r.Host, r.Method, r.RequestURI, err.Error())
-		http.Error(w, err.Error(), 401)
 		return
 	}
 
