@@ -71,7 +71,7 @@ func DecodeHttpHandler(w http.ResponseWriter, r *http.Request) {
 		logger.Printf("[%s] [%s] [%s %s] %s\n", r.RemoteAddr, r.Host, r.Method, r.RequestURI, err.Error())
 		return
 	}
-
-	r.Header.Set(JwtOutboundHeader, string(payload))
+	logger.Printf("[%s] [%s] [%s %s] Adding payload: \n%s\nTo header: %s", r.RemoteAddr, r.Host, r.Method, r.RequestURI, string(payload), JwtOutboundHeader)
+	w.Header().Set(JwtOutboundHeader, string(payload))
 	logger.Printf("[%s] [%s] [%s %s] %s\n", r.RemoteAddr, r.Host, r.Method, r.RequestURI, "Successfully authorized")
 }
