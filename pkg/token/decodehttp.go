@@ -45,7 +45,7 @@ func DecodeHttpHandler(w http.ResponseWriter, r *http.Request) {
 	if JwtCheckExp {
 		// Make sure the exp is before today...
 		if _, ok := mapClaims["exp"]; ok != true {
-			logger.Printf("[%s] [%s] [%s %s] %s\n", r.RemoteAddr, r.Host, r.Method, r.RequestURI, err.Error())
+			logger.Printf("[%s] [%s] [%s %s] %s\n", r.RemoteAddr, r.Host, r.Method, r.RequestURI, "exp was not provided in the json payload")
 			return
 		}
 
