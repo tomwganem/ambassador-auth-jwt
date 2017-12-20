@@ -28,7 +28,6 @@ func DecodeHttpHandler(w http.ResponseWriter, r *http.Request) {
 		jwtCookie, err := r.Cookie(JwtCookieName)
 		if err != nil {
 			logger.Printf("[%s] [%s] [%s %s] %s\n", r.RemoteAddr, r.Host, r.Method, r.RequestURI, "Unable to retrieve jwt from header 'Authorization' or cookie "+JwtCookieName)
-			http.Error(w, fmt.Sprintf("Unable to retrieve jwt from header '%s' or cookie '%s'", "Authorization", JwtCookieName), 401)
 			return
 		}
 		jwt = jwtCookie.String()
