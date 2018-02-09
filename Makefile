@@ -6,7 +6,6 @@ build_static:
 
 docker: build_static
 	docker build . -t "kminehart/ambassador-auth-jwt:latest"
-	docker build . -t "kminehart/ambassador-auth-jwt:v1.1.0"
-
+	docker build . -t "kminehart/ambassador-auth-jwt:v1.2.1"
 test:
 	go test ./pkg/...
