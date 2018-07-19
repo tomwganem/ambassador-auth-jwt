@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/kminehart/ambassador-auth-jwt/pkg/token"
+	"../token"
 )
 
 type Server struct {

@@ -5,8 +5,8 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/kminehart/ambassador-auth-jwt/pkg/httpserver"
-	"github.com/kminehart/ambassador-auth-jwt/pkg/token"
+	"../../pkg/httpserver"
+	"../../pkg/token"
 )
 
 var (
