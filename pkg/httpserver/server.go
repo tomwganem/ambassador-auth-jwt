@@ -7,17 +7,20 @@ import (
 	"github.com/tomwganem/ambassador-auth-jwt/pkg/token"
 )
 
+// Server needs to know about the Issuer url to verify tokens against
 type Server struct {
-	Secret string
+	Issuer string
 }
 
-func (this *Server) Start(port int) error {
+// Start accepting requests and decoding Authorization headers
+func (Start *Server) Start(port int) error {
 	http.HandleFunc("/", token.DecodeHTTPHandler)
 	return http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", port), nil)
 }
 
-func NewServer(secret string) *Server {
+// NewServer creates a new "Server" object
+func NewServer(issuer string) *Server {
 	return &Server{
-		Secret: secret,
+		Issuer: issuer,
 	}
 }

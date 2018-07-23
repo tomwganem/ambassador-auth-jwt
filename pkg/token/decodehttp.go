@@ -14,7 +14,7 @@ var (
 	// JwtCheckExp will determine if we need to verify if the token is expired or not
 	JwtCheckExp = true
 	// JwtIssuer is the url where we can retreive a set of public keys to verify rsa based tokens with
-	JwtIssuer = "secret"
+	JwtIssuer = "http://localhost/.well-known/jwks.json"
 	// JwtOutboundHeader is the name of header the parsed token cliams will be inserted into
 	JwtOutboundHeader = "X-JWT-PAYLOAD"
 )
