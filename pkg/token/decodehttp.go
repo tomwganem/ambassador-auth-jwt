@@ -57,15 +57,8 @@ func DecodeHTTPHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		exp, err := time.Parse(time.RFC3339, mapClaims["exp"].(string))
-		if err != nil {
-			logger.Printf("[%s] [%s] [%s %s] %s\n", r.RemoteAddr, r.Host, r.Method, r.RequestURI, err.Error())
-			http.Error(w, err.Error(), 401)
-			return
-		}
-
-		exp = exp.UTC()
-		now := time.Now().UTC()
+		exp := time.Unix(mapClaims["exp"].(int64), 0)
+		now := time.Now()
 
 		if exp.Before(now) {
 			errorLogger.Error("Token is expired")
