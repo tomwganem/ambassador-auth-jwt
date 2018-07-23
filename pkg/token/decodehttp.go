@@ -2,43 +2,49 @@ package token
 
 import (
 	"encoding/json"
-	"log"
+	"fmt"
 	"net/http"
-	"os"
 	"strings"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 var (
-	logger            = log.New(os.Stdout, "", log.Ltime|log.LUTC)
 	JwtCheckExp       = true
-	JwtCookieName     = "jwt"
-	JwtSecret         = "secret"
-	JwtOutboundHeader = "x-jwt-payload"
+	JwtIssuer         = "secret"
+	JwtOutboundHeader = "X-JWT-PAYLOAD"
 )
 
-func DecodeHttpHandler(w http.ResponseWriter, r *http.Request) {
-	logger.Printf("[%s] [%s] [%s %s] %s\n", r.RemoteAddr, r.Host, r.Method, r.RequestURI, r.UserAgent())
-
-	// Get the JWT
+func DecodeHTTPHandler(w http.ResponseWriter, r *http.Request) {
+	errorLogger := log.WithFields(log.Fields{
+		"remote_addr": r.RemoteAddr,
+		"host":        r.Host,
+		"method":      r.Method,
+		"request_uri": r.RequestURI,
+		"user_agent":  r.UserAgent(),
+		"status":      "401",
+	})
+	// Get the Jwt
 	jwt := r.Header.Get("Authorization")
 	if jwt == "" {
-		logger.Printf("[%s] [%s] [%s %s] %s\n", r.RemoteAddr, r.Host, r.Method, r.RequestURI, "No value in header 'Authorization'. Attempting to check cookie")
-		jwtCookie, err := r.Cookie(JwtCookieName)
-		if err != nil {
-			logger.Printf("[%s] [%s] [%s %s] %s\n", r.RemoteAddr, r.Host, r.Method, r.RequestURI, "Unable to retrieve jwt from header 'Authorization' or cookie "+JwtCookieName)
-			http.Error(w, fmt.Sprintf("Unable to retrieve jwt from header '%s' or cookie '%s'", "Authorization", JwtCookieName), 401)
-			return
-		}
-		jwt = jwtCookie.String()
+		errorLogger.Error("Unable to retrieve Jwt from header 'Authorization'")
+		http.Error(w, fmt.Sprintf("Unable to retrieve Jwt from header '%s'", "Authorization"), 401)
+		return
 	}
 
 	// Decode it
+	mapClaims := make(map[string]interface{})
 	jwt = strings.Replace(jwt, "Bearer ", "", 1)
-
-	mapClaims, err := Decode(jwt, JwtSecret)
+	decoded, err := Decode(jwt, JwtIssuer)
 	if err != nil {
-		logger.Printf("[%s] [%s] [%s %s] %s\n", r.RemoteAddr, r.Host, r.Method, r.RequestURI, err.Error())
+		errorLogger.Error(err.Error())
+		http.Error(w, err.Error(), 401)
+		return
+	}
+	claims, err := json.Marshal(decoded)
+	if err := json.Unmarshal(claims, &mapClaims); err != nil {
+		errorLogger.Error(err.Error())
 		http.Error(w, err.Error(), 401)
 		return
 	}
@@ -46,7 +52,7 @@ func DecodeHttpHandler(w http.ResponseWriter, r *http.Request) {
 	if JwtCheckExp {
 		// Make sure the exp is before today...
 		if _, ok := mapClaims["exp"]; ok != true {
-			logger.Printf("[%s] [%s] [%s %s] %s\n", r.RemoteAddr, r.Host, r.Method, r.RequestURI, "exp was not provided in the json payload")
+			errorLogger.Error(err.Error())
 			http.Error(w, err.Error(), 401)
 			return
 		}
@@ -62,20 +68,21 @@ func DecodeHttpHandler(w http.ResponseWriter, r *http.Request) {
 		now := time.Now().UTC()
 
 		if exp.Before(now) {
-			logger.Printf("[%s] [%s] [%s %s] %s\n", r.RemoteAddr, r.Host, r.Method, r.RequestURI, "Token is expired")
+			errorLogger.Error("Token is expired")
 			http.Error(w, "This token is expired", 401)
 			return
 		}
 	}
-
-	// Put it in the header
-	payload, err := json.Marshal(mapClaims)
-	if err != nil {
-		logger.Printf("[%s] [%s] [%s %s] %s\n", r.RemoteAddr, r.Host, r.Method, r.RequestURI, err.Error())
-		http.Error(w, err.Error(), 401)
-		return
-	}
-	logger.Printf("[%s] [%s] [%s %s] Adding payload: \n%s\nTo header: %s", r.RemoteAddr, r.Host, r.Method, r.RequestURI, string(payload), JwtOutboundHeader)
-	w.Header().Set(JwtOutboundHeader, string(payload))
-	logger.Printf("[%s] [%s] [%s %s] %s\n", r.RemoteAddr, r.Host, r.Method, r.RequestURI, "Successfully authorized")
+	h := make(map[string]interface{})
+	h[JwtOutboundHeader] = mapClaims
+	log.WithFields(log.Fields{
+		"remote_addr": r.RemoteAddr,
+		"host":        r.Host,
+		"method":      r.Method,
+		"request_uri": r.RequestURI,
+		"user_agent":  r.UserAgent(),
+		"header":      h,
+		"status":      "200",
+	}).Info("Authentication Success")
+	w.Header().Set(JwtOutboundHeader, string(claims))
 }

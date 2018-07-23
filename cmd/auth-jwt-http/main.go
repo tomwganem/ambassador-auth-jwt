@@ -1,9 +1,10 @@
 package main
 
 import (
-	"log"
 	"os"
 	"strconv"
+
+	log "github.com/sirupsen/logrus"
 
 	"../../pkg/httpserver"
 	"../../pkg/token"
@@ -12,48 +13,44 @@ import (
 var (
 	ListenPortStr     string
 	ListenPort        int
-	JwtSecret         string
-	JwtCookieName     string
+	JwtIssuer         string
 	JwtOutboundHeader string
 	CheckExp          bool
 )
 
 func init() {
+	log.SetFormatter(&log.JSONFormatter{})
+	log.SetOutput(os.Stdout)
+	log.SetLevel(log.InfoLevel)
 	ListenPortStr = os.Getenv("LISTEN_PORT")
 	var err error
 	ListenPort, err = strconv.Atoi(ListenPortStr)
 	if err != nil {
-		log.Printf("Error converting LISTEN_PORT to int, using 3000. Error: %s\n", err.Error())
+		log.Warn("Unable to convert LISTEN_PORT to integer: using 3000")
 		ListenPort = 3000
 	}
 
-	JwtSecret = os.Getenv("JWT_SECRET")
-	JwtCookieName = os.Getenv("JWT_COOKIE_NAME")
+	JwtIssuer = os.Getenv("JWT_ISSUER")
 	JwtOutboundHeader = os.Getenv("JWT_OUTBOUND_HEADER")
 	checkExp := os.Getenv("CHECK_EXP")
 
-	// For security reasons, we will not set a default JWT_SECRET.
-	// Generate a random secret and don't share it.
-	if JwtSecret == "" {
-		log.Fatal("JWT_SECRET is empty")
+	if JwtIssuer == "" {
+		log.Fatal("JWT_ISSUER is empty")
 	}
 
 	CheckExp = false
 	if checkExp != "" {
 		b, err := strconv.ParseBool(checkExp)
 		if err != nil {
-			log.Println("Could not convert CHECK_EXP to bool. Defaulting to false Error: %s\n", err.Error())
+			log.Warn("Unable to convert CHECK_EXP to bool: setting to false")
 			b = false
 		}
 		CheckExp = b
 	}
 
-	token.JwtSecret = JwtSecret
+	token.JwtIssuer = JwtIssuer
 
 	// Optional envs
-	if JwtCookieName != "" {
-		token.JwtCookieName = JwtCookieName
-	}
 	if JwtOutboundHeader != "" {
 		token.JwtOutboundHeader = JwtOutboundHeader
 	}
@@ -62,7 +59,7 @@ func init() {
 }
 
 func main() {
-	log.Println("Starting auth-jwt service...")
-	server := httpserver.NewServer(JwtSecret)
+	log.Info("Starting auth-jwt service")
+	server := httpserver.NewServer(JwtIssuer)
 	log.Fatal(server.Start(ListenPort))
 }

@@ -12,7 +12,7 @@ type Server struct {
 }
 
 func (this *Server) Start(port int) error {
-	http.HandleFunc("/", token.DecodeHttpHandler)
+	http.HandleFunc("/", token.DecodeHTTPHandler)
 	return http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", port), nil)
 }
 
