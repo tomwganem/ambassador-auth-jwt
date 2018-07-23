@@ -1,0 +1,5 @@
+vendor/
+.git/
+bin/
+README.md
+Dockerfile
