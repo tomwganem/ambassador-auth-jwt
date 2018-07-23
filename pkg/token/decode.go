@@ -12,7 +12,7 @@ import (
 	jwt "gopkg.in/square/go-jose.v2/jwt"
 )
 
-// JwkSetGet
+// JwkSetGet will call the url provided JWT_ISSUER and retreive a JWK Set.
 func JwkSetGet(issuer string) ([]jose.JSONWebKey, error) {
 	resp, err := http.Get(issuer)
 	if err != nil {
@@ -27,7 +27,7 @@ func JwkSetGet(issuer string) ([]jose.JSONWebKey, error) {
 	return keyset.Keys, nil
 }
 
-// Decode the raw token and validate it again
+// Decode the raw token and validate it with a JWK Set.
 func Decode(jwtoken string, issuer string) (jwt.Claims, error) {
 	claims := jwt.Claims{}
 	token, err := jwt.ParseSigned(jwtoken)

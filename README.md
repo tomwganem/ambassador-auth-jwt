@@ -1,10 +1,14 @@
-# Ambassador Auth JWT Service
+# Ambassador Auth JWT-RSA Service
+
+This is a fork of [kminehart/ambassador-auth-jwt](https://github.com/kminehart/ambassador-auth-jwt), which is able to verify HMAC based tokens, but not RSA ones. This module is very single purpose.
 
 ## Using the service
 
 This service is not responsible for creating and assigning JWTs.
 
-It will take the provided secret and decode the JWT / `Bearer` token (provided by the `Authorization` header) and assign the decoded key to `x-decoded-jwt`. (or whatever you configure it to)
+It decode JWT / `Bearer` tokens (provided by the `Authorization` header) and verify it against a JWKSet, provided by the `JWT_ISSUER` env variable.
+
+It will return a 200 if it can verify the token, 401 if not.
 
 ## Configuration
 
@@ -12,19 +16,22 @@ Provide the following environment variables:
 
 | name | description | default value |
 |------|-------------|---------------|
-| `JWT_SECRET` | The secret used to encode / decode the JWT | |
-| `JWT_COOKIE_NAME` | The name of the cookie to check for the token | `jwt` |
-| `JWT_OUTBOUND_HEADER` | The name of the header to put the decoded payload in | `x-decoded-jwt` |
+| `JWT_ISSUER` | public endpoint with JWKSet to verify tokens against | |
+| `JWT_OUTBOUND_HEADER` | The name of the header to put the decoded payload in | `X-JWT-PAYLOAD` |
 | `CHECK_EXP` | Set to true if you want this service to look at the RFC3339 timestamp in the `exp` value of the payload to determine if the token is expired | `false` |
 
 ## Run on Kubernetes
 
-Take a look at the [`kubernetes.yaml`](kubernetes.yaml) file provided and modify accordingly, and then run 
+Take a look at the [`kubernetes.yaml`](kubernetes.yaml) file provided and modify accordingly, and then run
 
 ```
 kubectl apply -f kubernetes.yaml
 ```
 **note:** it is very crucial that you set a much stronger secret before deploying this to production.
+
+## Logging
+
+All logs are in json format to be consumed in a ELK stack.
 
 ## Ambassador
 
