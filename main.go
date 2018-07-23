@@ -5,9 +5,8 @@ import (
 	"strconv"
 
 	log "github.com/sirupsen/logrus"
-
-	"../../pkg/httpserver"
-	"../../pkg/token"
+	"github.com/tomwganem/ambassador-auth-jwt/pkg/httpserver"
+	"github.com/tomwganem/ambassador-auth-jwt/pkg/token"
 )
 
 var (
