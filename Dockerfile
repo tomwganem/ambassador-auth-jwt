@@ -1,5 +1,5 @@
 FROM golang:1.10.2-alpine3.7 as builder
-MAINTAINER Tom Ganem <tganem@us.ibm.com>
+LABEL maintainer="Tom Ganem <tganem@us.ibm.com>"
 
 RUN apk add --no-cache --virtual .build-deps \
         curl \
