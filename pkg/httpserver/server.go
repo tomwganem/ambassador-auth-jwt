@@ -100,7 +100,7 @@ func (server *Server) DecodeHTTPHandler(w http.ResponseWriter, r *http.Request) 
 	w.Header().Set(JwtOutboundHeader, string(claims))
 }
 
-// NewServer creates a new "Server" object
+// NewServer creates a new Server object with the jwkset retreived from the issuer
 func NewServer(issuer string) *Server {
 	jwks, err := token.JwkSetGet(issuer)
 	if err != nil {
