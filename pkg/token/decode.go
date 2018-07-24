@@ -32,22 +32,34 @@ func JwkSetGet(issuer string) (jose.JSONWebKeySet, error) {
 }
 
 // Decode the raw token and validate it with a JWK Set.
-func Decode(jwtoken string, issuer string) (jwt.Claims, error) {
+func Decode(jwtoken string, jwkset jose.JSONWebKeySet, issuer string) (jwt.Claims, jose.JSONWebKeySet, error) {
 	claims := jwt.Claims{}
 	token, err := jwt.ParseSigned(jwtoken)
 	if err != nil {
-		return claims, fmt.Errorf("Could not read jwt")
+		return claims, jwkset, fmt.Errorf("Could not read jwt")
 	}
 	keyid := token.Headers[0].KeyID
-	jwkset, err := JwkSetGet(issuer)
 	jwk := jwkset.Key(keyid)
 	if len(jwk) == 0 {
-		return claims, errors.New("Can not find token's key id in jwk set")
+		jwkset, err = JwkSetGet(issuer)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"issuer": issuer,
+			}).Fatal("Unable to update keyset")
+		}
+		log.WithFields(log.Fields{
+			"keyset": jwkset,
+			"issuer": issuer,
+		}).Info("Updating Keyset")
+		jwk = jwkset.Key(keyid)
+		if len(jwk) == 0 {
+			return claims, jwkset, errors.New("Can not find token's key id in jwk set")
+		}
 	}
 
 	if err := token.Claims(jwk[0].Key.(*rsa.PublicKey), &claims); err != nil {
-		return claims, err
+		return claims, jwkset, err
 	}
 
-	return claims, nil
+	return claims, jwkset, nil
 }

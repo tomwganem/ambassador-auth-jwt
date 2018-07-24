@@ -6,7 +6,6 @@ import (
 
 	log "github.com/sirupsen/logrus"
 	"github.com/tomwganem/ambassador-auth-jwt/pkg/httpserver"
-	"github.com/tomwganem/ambassador-auth-jwt/pkg/token"
 )
 
 var (
@@ -25,7 +24,7 @@ func init() {
 	var err error
 	ListenPort, err = strconv.Atoi(ListenPortStr)
 	if err != nil {
-		log.Warn("Unable to convert LISTEN_PORT to integer: using 3000")
+		log.Warn("Unable to convert LISTEN_PORT to integer, defaulting to port 3000")
 		ListenPort = 3000
 	}
 
@@ -47,14 +46,14 @@ func init() {
 		CheckExp = b
 	}
 
-	token.JwtIssuer = JwtIssuer
+	httpserver.JwtIssuer = JwtIssuer
 
 	// Optional envs
 	if JwtOutboundHeader != "" {
-		token.JwtOutboundHeader = JwtOutboundHeader
+		httpserver.JwtOutboundHeader = JwtOutboundHeader
 	}
 
-	token.JwtCheckExp = CheckExp
+	httpserver.JwtCheckExp = CheckExp
 }
 
 func main() {
