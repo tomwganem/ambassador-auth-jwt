@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"strconv"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/tomwganem/ambassador-auth-jwt/pkg/httpserver"
@@ -17,7 +18,7 @@ var (
 )
 
 func init() {
-	log.SetFormatter(&log.JSONFormatter{})
+	log.SetFormatter(&log.JSONFormatter{TimestampFormat: time.RFC3339Nano})
 	log.SetOutput(os.Stdout)
 	log.SetLevel(log.InfoLevel)
 	ListenPortStr = os.Getenv("LISTEN_PORT")
