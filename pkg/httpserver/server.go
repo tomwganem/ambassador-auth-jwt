@@ -38,17 +38,29 @@ func (server *Server) Start(port int) error {
 func (server *Server) DecodeHTTPHandler(w http.ResponseWriter, r *http.Request) {
 	errorLogger := log.WithFields(log.Fields{
 		"remote_addr": r.RemoteAddr,
+		"headers":     r.Header,
 		"host":        r.Host,
+		"url":         r.URL,
 		"method":      r.Method,
 		"request_uri": r.RequestURI,
 		"user_agent":  r.UserAgent(),
 		"status":      "401",
 	})
+
+	unauthorized := map[string]string{"code": "unauthorized", "message": "You are not authorized to perform the requested action"}
+	error, _ := json.Marshal(unauthorized)
+
+	enableCors(&w)
+	// Enabled PREFLIGHT calls
+	if r.Method == "OPTIONS" {
+		return
+	}
+
 	// Get the Jwt
 	jwt := r.Header.Get("Authorization")
 	if jwt == "" {
-		errorLogger.Error("Unable to retrieve Jwt from Authorization header")
-		http.Error(w, fmt.Sprintf("Unable to retrieve Jwt from header '%s'", "Authorization"), 401)
+		errorLogger.Error("Unable to retrieve JWToken from Authorization header")
+		http.Error(w, string(error), 401)
 		return
 	}
 
@@ -59,13 +71,13 @@ func (server *Server) DecodeHTTPHandler(w http.ResponseWriter, r *http.Request) 
 	server.JwkSet = jwkset
 	if err != nil {
 		errorLogger.Error(err.Error())
-		http.Error(w, err.Error(), 401)
+		http.Error(w, string(error), 401)
 		return
 	}
 	claims, err := json.Marshal(decoded)
 	if err := json.Unmarshal(claims, &mapClaims); err != nil {
 		errorLogger.Error(err.Error())
-		http.Error(w, err.Error(), 401)
+		http.Error(w, string(error), 401)
 		return
 	}
 
@@ -73,7 +85,7 @@ func (server *Server) DecodeHTTPHandler(w http.ResponseWriter, r *http.Request) 
 		// Make sure the exp is before today...
 		if _, ok := mapClaims["exp"]; ok != true {
 			errorLogger.Error(err.Error())
-			http.Error(w, err.Error(), 401)
+			http.Error(w, string(error), 401)
 			return
 		}
 		exp := time.Unix(int64(mapClaims["exp"].(float64)), 0)
@@ -81,7 +93,7 @@ func (server *Server) DecodeHTTPHandler(w http.ResponseWriter, r *http.Request) 
 
 		if exp.Before(now) {
 			errorLogger.Error("Token is expired")
-			http.Error(w, "This token is expired", 401)
+			http.Error(w, string(error), 401)
 			return
 		}
 	}
@@ -113,4 +125,11 @@ func NewServer(issuer string) *Server {
 		Issuer: issuer,
 		JwkSet: jwks,
 	}
+}
+func enableCors(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+	(*w).Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT, OPTIONS")
+	(*w).Header().Set("Access-Control-Allow-Headers", "authorization")
+	(*w).Header().Set("Access-Control-Max-Age", "1728000")
+	(*w).Header().Set("Access-Control-Expose-Headers", "")
 }
