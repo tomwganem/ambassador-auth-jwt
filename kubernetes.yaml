@@ -1,29 +1,33 @@
 ---
 apiVersion: v1
-kind: Secret
-metadata:
-  name: jwt-secret
-type: Opaque
-data:
-  jwtsecret: c2VjcmV0
----
-apiVersion: v1
 kind: Service
 metadata:
-  name: example-jwt-auth
+  name: ambassador-jwt-auth
+  namespace: ambassador
+  annotations:
+    getambassador.io/config: |
+      ---
+      apiVersion: ambassador/v1
+      kind: AuthService
+      name: authentication
+      auth_service: "ambassador-jwt-auth"
+      path_prefix:  "/auth"
+      proto: http
+      allow_request_body: false
 spec:
   type: ClusterIP
   selector:
-    app: example-jwt-auth
+    app: ambassador-jwt-auth
   ports:
-  - port: 3000
-    name: http-example-auth
-    targetPort: 3000
+  - port: 80
+    name: ambassador-jwt-auth-http
+    targetPort: http
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: example-jwt-auth
+  name: ambassador-jwt-auth
+  namespace: ambassador
 spec:
   replicas: 1
   strategy:
@@ -31,27 +35,21 @@ spec:
   template:
     metadata:
       labels:
-        app: example-jwt-auth
+        app: ambassador-jwt-auth
     spec:
+      imagePullSecrets:
+      - name: ahab.asperasoft.com
       containers:
-      - name: example-jwt-auth
-        image: kminehart/ambassador-auth-jwt:v1.0.0
+      - name: ambassador-jwt-auth
+        image: ahab.asperasoft.com/devops/ambassador-auth-jwt:latest
         imagePullPolicy: Always
         ports:
-        - name: http-api
+        - name: http
           containerPort: 3000
         env:
-        - name: JWT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: jwt-secret
-              key: jwtsecret
-        - name: JWT_COOKIE_NAME
+        - name: JWT_ISSUER
+          value: http://analytics-qa-f4-back-end.analytics-qa/api/v1/keys
+        - name: JWT_OUTBOUND_HEADER
           value: session_token
         - name: CHECK_EXP
           value: "true"
-        resources:
-          limits:
-            cpu: "0.1"
-            memory: 100Mi
-
