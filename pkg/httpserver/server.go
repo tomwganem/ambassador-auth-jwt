@@ -34,7 +34,7 @@ func (server *Server) Start(port int) error {
 	return http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", port), nil)
 }
 
-// DecodeHTTPHandler will try to extract the bearer token found in the Authorization header of each request
+// DecodeHTTPHandler will try to extract the bearer token found in the Authorization header of each request and verify it
 func (server *Server) DecodeHTTPHandler(w http.ResponseWriter, r *http.Request) {
 	errorLogger := log.WithFields(log.Fields{
 		"remote_addr": r.RemoteAddr,
@@ -76,8 +76,7 @@ func (server *Server) DecodeHTTPHandler(w http.ResponseWriter, r *http.Request) 
 			http.Error(w, err.Error(), 401)
 			return
 		}
-
-		exp := time.Unix(mapClaims["exp"].(int64), 0)
+		exp := time.Unix(int64(mapClaims["exp"].(float64)), 0)
 		now := time.Now()
 
 		if exp.Before(now) {
@@ -100,14 +99,14 @@ func (server *Server) DecodeHTTPHandler(w http.ResponseWriter, r *http.Request) 
 	w.Header().Set(JwtOutboundHeader, string(claims))
 }
 
-// NewServer creates a new Server object with the jwkset retreived from the issuer
+// NewServer creates a new Server object with the jwkset retrieved from the issuer
 func NewServer(issuer string) *Server {
 	jwks, err := token.JwkSetGet(issuer)
 	if err != nil {
 		log.WithFields(log.Fields{
 			"keyset": jwks,
 			"issuer": issuer,
-		}).Fatal("Unable to retreive keyset")
+		}).Fatal("Unable to retrieve keyset")
 	}
 
 	return &Server{
