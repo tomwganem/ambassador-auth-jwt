@@ -38,7 +38,6 @@ func (server *Server) Start(port int) error {
 func (server *Server) DecodeHTTPHandler(w http.ResponseWriter, r *http.Request) {
 	errorLogger := log.WithFields(log.Fields{
 		"remote_addr": r.RemoteAddr,
-		"headers":     r.Header,
 		"host":        r.Host,
 		"url":         r.URL,
 		"method":      r.Method,
@@ -58,10 +57,21 @@ func (server *Server) DecodeHTTPHandler(w http.ResponseWriter, r *http.Request) 
 
 	// Get the Jwt
 	jwt := r.Header.Get("Authorization")
+	query := r.URL.Query()
+	t := query["token"]
+	bt := query["bearer_token"]
+
 	if jwt == "" {
-		errorLogger.Error("Unable to retrieve JWToken from Authorization header")
-		http.Error(w, string(error), 401)
-		return
+		if len(t) < 1 || t[0] == "" {
+			if len(bt) < 1 || bt[0] == "" {
+				errorLogger.Error("Unable to retrieve JWToken from Authorization header or query parameter")
+				http.Error(w, string(error), 401)
+				return
+			}
+			jwt = bt[0]
+		} else {
+			jwt = t[0]
+		}
 	}
 
 	// Decode it
