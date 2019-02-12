@@ -1,0 +1,1 @@
+include: https://devops.gitlab.aspera.us/gitlab-ci-common/go.yml
