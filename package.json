@@ -1,0 +1,38 @@
+{
+  "name": "ambassador-auth-jwt",
+  "version": "0.0.0",
+  "description": "ambassador auth module for verifying JWTokens",
+  "scripts": {
+    "test": "go test ./pkg/...",
+    "build": "go build -o ./bin/auth-jwt-http",
+    "build_static": "CGO_ENABLED=0 GOOS=linux go build -o ./bin/auth-jwt-http -a -tags netgo -ldflags '-w'",
+    "docker": "docker build . -t tomwganem/ambassador-auth-jwt:latest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:tomwganem/ambassador-auth-jwt.git"
+  },
+  "keywords": [
+    "ambassador",
+    "jwt",
+    "auth"
+  ],
+  "standard-version": {
+    "message": "chore(release): %s\n\n[ci skip]",
+    "scripts": {
+      "prechangelog": "version=$(node -pe 'require(\"./package.json\").version'); sed -i.bck -E \"s|Version[[:space:]]+=.*|Version = \\\"${version}\\\"|g\" main.go; git add main.go"
+    }
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^7.0.0",
+    "@commitlint/config-conventional": "^7.0.1",
+    "husky": "^0.14.3",
+    "standard-version": "^4.4.0"
+  },
+  "engines": {
+    "node": ">=10.14.1",
+    "npm": ">=6.4.1"
+  },
+  "author": "IBM Aspera",
+  "license": "MIT"
+}

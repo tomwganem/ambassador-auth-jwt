@@ -1,5 +1,8 @@
 vendor/
-.git/
 bin/
+node_modules/
+
+.git/
+.gitlab-ci.yml
 README.md
 Dockerfile

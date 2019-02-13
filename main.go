@@ -10,6 +10,8 @@ import (
 )
 
 var (
+	Version = "0.0.0"
+
 	ListenPortStr     string
 	ListenPort        int
 	JwtIssuer         string
@@ -21,6 +23,9 @@ func init() {
 	log.SetFormatter(&log.JSONFormatter{TimestampFormat: time.RFC3339Nano})
 	log.SetOutput(os.Stdout)
 	log.SetLevel(log.InfoLevel)
+	log.WithFields(log.Fields{
+		"version": Version,
+	}).Info("Starting ambassador-auth-jwt")
 	ListenPortStr = os.Getenv("LISTEN_PORT")
 	var err error
 	ListenPort, err = strconv.Atoi(ListenPortStr)
@@ -58,7 +63,6 @@ func init() {
 }
 
 func main() {
-	log.Info("Starting auth-jwt service")
 	server := httpserver.NewServer(JwtIssuer)
 	log.Fatal(server.Start(ListenPort))
 }
