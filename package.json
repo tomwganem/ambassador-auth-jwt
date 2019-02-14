@@ -4,8 +4,8 @@
   "description": "ambassador auth module for verifying JWTokens",
   "scripts": {
     "test": "go test ./pkg/...",
-    "build": "go build -o ./bin/auth-jwt-http",
-    "build_static": "CGO_ENABLED=0 GOOS=linux go build -o ./bin/auth-jwt-http -a -tags netgo -ldflags '-w'",
+    "build": "go build -o ./bin/ambassador-auth-jwt",
+    "build_static": "CGO_ENABLED=0 GOOS=linux go build -o ./bin/ambassador-auth-jwt -a -tags netgo -ldflags '-w'",
     "docker": "docker build . -t tomwganem/ambassador-auth-jwt:latest"
   },
   "repository": {
