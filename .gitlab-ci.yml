@@ -6,4 +6,4 @@ include:
 
 .test_template:
   variables:
-    PROJECT_PATH: /go/src/github.com/tomwganem/
+    PROJECT_PATH: /go/src/github.com/tomwganem/${CI_PROJECT_NAME}
