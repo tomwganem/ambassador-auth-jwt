@@ -11,7 +11,7 @@ metadata:
       kind: AuthService
       name: authentication
       auth_service: "ambassador-jwt-auth"
-      path_prefix:  "/auth"
+      path_prefix: "/auth"
       proto: http
       allow_request_body: false
 spec:
@@ -41,14 +41,14 @@ spec:
       - name: ahab.asperasoft.com
       containers:
       - name: ambassador-jwt-auth
-        image: ahab.asperasoft.com/devops/ambassador-auth-jwt:latest
+        image: tomwganem/ambassador-auth-jwt:latest
         imagePullPolicy: Always
         ports:
         - name: http
           containerPort: 3000
         env:
         - name: JWT_ISSUER
-          value: http://analytics-qa-f4-back-end.analytics-qa/api/v1/keys
+          value: http://api.default/api/v1/keys
         - name: JWT_OUTBOUND_HEADER
           value: session_token
         - name: CHECK_EXP
