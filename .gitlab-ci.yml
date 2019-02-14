@@ -1,1 +1,9 @@
-include: https://devops.gitlab.aspera.us/gitlab-ci-common/go.yml
+include:
+  - https://devops.gitlab.aspera.us/gitlab-ci-common/_variables.yml
+  - https://devops.gitlab.aspera.us/gitlab-ci-common/_commitlint.yml
+  - https://devops.gitlab.aspera.us/gitlab-ci-common/_bump.yml
+  - https://devops.gitlab.aspera.us/gitlab-ci-common/test/go.yml
+
+.test_template:
+  variables:
+    PROJECT_PATH: /go/src/github.com/tomwganem/
