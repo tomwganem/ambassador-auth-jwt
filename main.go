@@ -10,13 +10,18 @@ import (
 )
 
 var (
+	// Version should correspond to a git tag
 	Version = "0.0.0"
-
-	ListenPortStr     string
-	ListenPort        int
-	JwtIssuer         string
+	// ListenPortStr saves the value extracted from the LISTEN_PORT env var
+	ListenPortStr string
+	// ListenPort saves LISTEN_PORT as an integer
+	ListenPort int
+	// JwtIssuer is set by the JWT_ISSUER env variable. It saves the url where the JWKeyset is found
+	JwtIssuer string
+	// JwtOutboundHeader defaults to X-JWT-PAYLOAD and is returned in the response
 	JwtOutboundHeader string
-	CheckExp          bool
+	// CheckExp is a simple flag to check whether tokens are expired
+	CheckExp bool
 )
 
 func init() {
