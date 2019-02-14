@@ -3,10 +3,14 @@
   "version": "0.0.0",
   "description": "ambassador auth module for verifying JWTokens",
   "scripts": {
+    "lint": "golint",
     "test": "go test ./pkg/...",
     "build": "go build -o ./bin/ambassador-auth-jwt",
     "build_static": "CGO_ENABLED=0 GOOS=linux go build -o ./bin/ambassador-auth-jwt -a -tags netgo -ldflags '-w'",
-    "docker": "docker build . -t tomwganem/ambassador-auth-jwt:latest"
+    "docker": "docker build . -t tomwganem/ambassador-auth-jwt:latest",
+    "release": "standard-version --commit-all --no-verify",
+    "commitmsg": "commitlint -e $GIT_PARAMS",
+    "prepush": "npm run lint"
   },
   "repository": {
     "type": "git",
