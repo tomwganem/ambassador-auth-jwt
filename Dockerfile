@@ -6,13 +6,15 @@ RUN apk add --no-cache --virtual .build-deps \
         git \
         openssh \
         make \
+        g++ \
     && curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 
 RUN go get -u golang.org/x/lint/golint
 
+ENV GO111MODULE on
 WORKDIR /go/src/github.com/tomwganem/ambassador-auth-jwt
 ADD . ./
-RUN dep ensure -v
+RUN go get ./...
 RUN go build -v -o /go/bin/ambassador-auth-jwt
 
 FROM alpine:3.9
