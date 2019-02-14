@@ -1,6 +1,7 @@
 vendor/
 bin/
 node_modules/
+coverage.*
 
 .git/
 .gitlab-ci.yml
