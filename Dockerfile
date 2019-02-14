@@ -8,6 +8,8 @@ RUN apk add --no-cache --virtual .build-deps \
         make \
     && curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 
+RUN go get -u golang.org/x/lint/golint
+
 WORKDIR /go/src/github.com/tomwganem/ambassador-auth-jwt
 ADD . ./
 RUN dep ensure -v
