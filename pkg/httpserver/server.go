@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	raven "github.com/getsentry/raven-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/tomwganem/ambassador-auth-jwt/pkg/token"
 	"gopkg.in/square/go-jose.v2"
@@ -125,6 +126,7 @@ func (server *Server) DecodeHTTPHandler(w http.ResponseWriter, r *http.Request) 
 func NewServer(issuer string) *Server {
 	jwks, err := token.JwkSetGet(issuer)
 	if err != nil {
+		raven.CaptureErrorAndWait(err, nil)
 		log.WithFields(log.Fields{
 			"keyset": jwks,
 			"issuer": issuer,

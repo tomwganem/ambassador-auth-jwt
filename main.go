@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	raven "github.com/getsentry/raven-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/tomwganem/ambassador-auth-jwt/pkg/httpserver"
 )
@@ -25,6 +26,11 @@ var (
 )
 
 func init() {
+	raven.SetDSN(os.Getenv("SENTRY_DSN"))
+	raven.SetEnvironment(os.Getenv("SENTRY_CURRENT_ENV"))
+	raven.SetRelease(os.Getenv("SENTRY_RELEASE"))
+	raven.SetIncludePaths([]string{"/pkg"})
+
 	log.SetFormatter(&log.JSONFormatter{TimestampFormat: time.RFC3339Nano})
 	log.SetOutput(os.Stdout)
 	log.SetLevel(log.InfoLevel)
