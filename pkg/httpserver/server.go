@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -16,9 +17,9 @@ import (
 var (
 	// JwtCheckExp will determine if we need to verify if the token is expired or not
 	JwtCheckExp = true
-	// JwtIssuer is the url where we can retreive a set of public keys to verify rsa based tokens with
+	// JwtIssuer is the url where we can retrieve a set of public keys to verify rsa based tokens with
 	JwtIssuer = "http://localhost/.well-known/jwks.json"
-	// JwtOutboundHeader is the name of header the parsed token cliams will be inserted into
+	// JwtOutboundHeader is the name of header the parsed token claims will be inserted into
 	JwtOutboundHeader = "X-JWT-PAYLOAD"
 )
 
@@ -37,15 +38,19 @@ func (server *Server) Start(port int) error {
 
 // DecodeHTTPHandler will try to extract the bearer token found in the Authorization header of each request and verify it
 func (server *Server) DecodeHTTPHandler(w http.ResponseWriter, r *http.Request) {
-	errorLogger := log.WithFields(log.Fields{
+	q, _ := url.ParseQuery(r.URL.RawQuery)
+	fields := log.Fields{
 		"remote_addr": r.RemoteAddr,
 		"host":        r.Host,
-		"url":         r.URL,
 		"method":      r.Method,
-		"request_uri": r.RequestURI,
+		"path":        r.URL.Path,
+		"query":       q,
 		"user_agent":  r.UserAgent(),
-		"status":      "401",
-	})
+	}
+	successFields := fields
+	errorFields := fields
+	errorFields["status"] = "401"
+	errorLogger := log.WithFields(errorFields)
 
 	unauthorized := map[string]string{"code": "unauthorized", "message": "You are not authorized to perform the requested action"}
 	error, _ := json.Marshal(unauthorized)
@@ -75,31 +80,35 @@ func (server *Server) DecodeHTTPHandler(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	// Decode it
-	mapClaims := make(map[string]interface{})
+	claims := make(map[string]interface{})
 	jwt = strings.Replace(jwt, "Bearer ", "", 1)
-	decoded, jwkset, err := token.Decode(jwt, server.JwkSet, JwtIssuer)
+	claims, jwkset, err := token.Decode(jwt, server.JwkSet, JwtIssuer)
 	server.JwkSet = jwkset
 	if err != nil {
 		errorLogger.Error(err.Error())
 		http.Error(w, string(error), 401)
 		return
 	}
-	claims, err := json.Marshal(decoded)
-	if err := json.Unmarshal(claims, &mapClaims); err != nil {
-		errorLogger.Error(err.Error())
-		http.Error(w, string(error), 401)
-		return
-	}
-
+	exp := time.Now()
 	if JwtCheckExp {
 		// Make sure the exp is before today...
-		if _, ok := mapClaims["exp"]; ok != true {
-			errorLogger.Error(err.Error())
-			http.Error(w, string(error), 401)
-			return
+		if _, ok := claims["exp"]; ok != true {
+			if _, ok := claims["expires_at"]; ok != true {
+				errorLogger.Error(err.Error())
+				http.Error(w, string(error), 401)
+				return
+			} else {
+				exp, err = time.Parse(time.RFC3339, claims["expires_at"].(string))
+				if err != nil {
+					raven.CaptureError(err, nil)
+					errorLogger.Error(err.Error())
+					http.Error(w, string(error), 500)
+				}
+			}
+		} else {
+			exp = time.Unix(int64(claims["exp"].(float64)), 0)
 		}
-		exp := time.Unix(int64(mapClaims["exp"].(float64)), 0)
+
 		now := time.Now()
 
 		if exp.Before(now) {
@@ -108,18 +117,11 @@ func (server *Server) DecodeHTTPHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 	}
-	h := make(map[string]interface{})
-	h[JwtOutboundHeader] = mapClaims
-	log.WithFields(log.Fields{
-		"remote_addr":     r.RemoteAddr,
-		"host":            r.Host,
-		"method":          r.Method,
-		"request_uri":     r.RequestURI,
-		"user_agent":      r.UserAgent(),
-		"outbound_header": h,
-		"status":          "200",
-	}).Info("Authentication Success")
-	w.Header().Set(JwtOutboundHeader, string(claims))
+	marshaledClaims, err := json.Marshal(claims)
+	successFields["claims"] = claims
+	successFields["status"] = "200"
+	log.WithFields(successFields).Info("Authentication Success")
+	w.Header().Set(JwtOutboundHeader, string(marshaledClaims))
 }
 
 // NewServer creates a new Server object with the jwkset retrieved from the issuer
@@ -138,6 +140,7 @@ func NewServer(issuer string) *Server {
 		JwkSet: jwks,
 	}
 }
+
 func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 	(*w).Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT, OPTIONS")

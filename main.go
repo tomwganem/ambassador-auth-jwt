@@ -28,14 +28,14 @@ var (
 func init() {
 	raven.SetDSN(os.Getenv("SENTRY_DSN"))
 	raven.SetEnvironment(os.Getenv("SENTRY_CURRENT_ENV"))
-	raven.SetRelease(os.Getenv("SENTRY_RELEASE"))
-	raven.SetIncludePaths([]string{"/pkg"})
-
+	raven.SetRelease(Version)
 	log.SetFormatter(&log.JSONFormatter{TimestampFormat: time.RFC3339Nano})
 	log.SetOutput(os.Stdout)
 	log.SetLevel(log.InfoLevel)
 	log.WithFields(log.Fields{
-		"version": Version,
+		"version":            Version,
+		"sentry_dsn":         os.Getenv("SENTRY_DSN"),
+		"sentry_environment": os.Getenv("SENTRY_CURRENT_ENV"),
 	}).Info("Starting ambassador-auth-jwt")
 	ListenPortStr = os.Getenv("LISTEN_PORT")
 	var err error
