@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.2.0"></a>
+# [0.2.0](https://github.com/tomwganem/ambassador-auth-jwt/compare/v0.1.0...v0.2.0) (2019-03-07)
+
+
+### Bug Fixes
+
+* fix issue where we are unable to auth tokens with 'expires_at' ([2de4949](https://github.com/tomwganem/ambassador-auth-jwt/commit/2de4949))
+
+
+### Features
+
+* add sentry ([967e21e](https://github.com/tomwganem/ambassador-auth-jwt/commit/967e21e))
+
+
+
 <a name="0.1.0"></a>
 # 0.1.0 (2019-02-14)
 
