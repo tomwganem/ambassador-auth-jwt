@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.3.0-rc.0"></a>
+# [0.3.0-rc.0](https://github.com/tomwganem/ambassador-auth-jwt/compare/v0.2.0...v0.3.0-rc.0) (2019-03-08)
+
+
+### Features
+
+* add helm chart as sub repo ([b2ddcc2](https://github.com/tomwganem/ambassador-auth-jwt/commit/b2ddcc2))
+
+
+
 <a name="0.2.0"></a>
 # [0.2.0](https://github.com/tomwganem/ambassador-auth-jwt/compare/v0.1.0...v0.2.0) (2019-03-07)
 
