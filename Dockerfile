@@ -19,4 +19,6 @@ RUN go build -v -o /go/bin/ambassador-auth-jwt
 
 FROM alpine:3.9
 COPY --from=builder /go/bin/* /usr/local/bin/
+RUN adduser -D -u 1000 app
+USER app
 CMD ["ambassador-auth-jwt"]
