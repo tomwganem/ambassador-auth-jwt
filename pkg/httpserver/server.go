@@ -117,6 +117,7 @@ func (server *Server) DecodeHTTPHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 	}
+	delete(claims, "sub")
 	marshaledClaims, err := json.Marshal(claims)
 	successFields["claims"] = claims
 	successFields["status"] = "200"
