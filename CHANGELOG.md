@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.3.1-rc.0"></a>
+## [0.3.1-rc.0](https://github.com/tomwganem/ambassador-auth-jwt/compare/v0.3.0...v0.3.1-rc.0) (2019-06-04)
+
+
+### Bug Fixes
+
+* delete "sub" key from claims ([e3867ba](https://github.com/tomwganem/ambassador-auth-jwt/commit/e3867ba))
+
+
+
 <a name="0.3.0"></a>
 # [0.3.0](https://github.com/tomwganem/ambassador-auth-jwt/compare/v0.2.0...v0.3.0) (2019-03-08)
 
