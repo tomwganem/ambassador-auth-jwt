@@ -1,4 +1,5 @@
-FROM golang:1.11.5-alpine3.9 as builder
+ARG VERSION=1.12.6-alpine3.10
+FROM golang:${VERSION} as builder
 LABEL maintainer="Tom Ganem <tganem@us.ibm.com>"
 
 RUN apk add --no-cache --virtual .build-deps \
@@ -17,7 +18,7 @@ ADD . ./
 RUN go get ./...
 RUN go build -v -o /go/bin/ambassador-auth-jwt
 
-FROM alpine:3.9
+FROM alpine:3.10
 COPY --from=builder /go/bin/* /usr/local/bin/
 RUN adduser -D -u 1000 app
 USER app
