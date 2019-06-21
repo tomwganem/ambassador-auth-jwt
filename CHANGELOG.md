@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.4.0-rc.0"></a>
+# [0.4.0-rc.0](https://github.com/tomwganem/ambassador-auth-jwt/compare/v0.3.0...v0.4.0-rc.0) (2019-06-21)
+
+
+### Bug Fixes
+
+* delete "sub" key from claims ([e3867ba](https://github.com/tomwganem/ambassador-auth-jwt/commit/e3867ba))
+* go mod tidy ([e28e7cf](https://github.com/tomwganem/ambassador-auth-jwt/commit/e28e7cf))
+
+
+### Features
+
+* allow Basic Auth Requests to be passed through ([f6c5f36](https://github.com/tomwganem/ambassador-auth-jwt/commit/f6c5f36))
+* use golang version 1.12.6 ([8c9c9cb](https://github.com/tomwganem/ambassador-auth-jwt/commit/8c9c9cb))
+
+
+
 <a name="0.3.1-rc.0"></a>
 ## [0.3.1-rc.0](https://github.com/tomwganem/ambassador-auth-jwt/compare/v0.3.0...v0.3.1-rc.0) (2019-06-04)
 
