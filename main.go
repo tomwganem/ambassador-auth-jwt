@@ -23,6 +23,8 @@ var (
 	JwtOutboundHeader string
 	// CheckExp is a simple flag to check whether tokens are expired
 	CheckExp bool
+	// AllowBasicAuthPassThrough control whether basic auth requests get rejected or not
+	AllowBasicAuthPassThrough bool
 )
 
 func init() {
@@ -48,6 +50,7 @@ func init() {
 	JwtIssuer = os.Getenv("JWT_ISSUER")
 	JwtOutboundHeader = os.Getenv("JWT_OUTBOUND_HEADER")
 	checkExp := os.Getenv("CHECK_EXP")
+	allowBasicAuthPassThrough := os.Getenv("ALLOW_BASIC_AUTH_PASSTHROUGH")
 
 	if JwtIssuer == "" {
 		log.Fatal("JWT_ISSUER is empty")
@@ -63,14 +66,23 @@ func init() {
 		CheckExp = b
 	}
 
-	httpserver.JwtIssuer = JwtIssuer
+	AllowBasicAuthPassThrough = false
+	if allowBasicAuthPassThrough != "" {
+		b, err := strconv.ParseBool(allowBasicAuthPassThrough)
+		if err != nil {
+			log.Warn("Unable to convert ALLOW_BASIC_AUTH_PASSTHROUGH to bool: setting to false")
+			b = false
+		}
+		AllowBasicAuthPassThrough = b
+	}
 
+	httpserver.JwtIssuer = JwtIssuer
+	httpserver.JwtCheckExp = CheckExp
+	httpserver.AllowBasicAuthPassThrough = AllowBasicAuthPassThrough
 	// Optional envs
 	if JwtOutboundHeader != "" {
 		httpserver.JwtOutboundHeader = JwtOutboundHeader
 	}
-
-	httpserver.JwtCheckExp = CheckExp
 }
 
 func main() {

@@ -1,10 +1,12 @@
 package httpserver
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"time"
 
@@ -21,6 +23,8 @@ var (
 	JwtIssuer = "http://localhost/.well-known/jwks.json"
 	// JwtOutboundHeader is the name of header the parsed token claims will be inserted into
 	JwtOutboundHeader = "X-JWT-PAYLOAD"
+	// AllowBasicAuthPassThrough will allow requests with a basic auth authorization header to be passed through
+	AllowBasicAuthPassThrough = false
 )
 
 // Server needs to know about the Issuer url to verify tokens against
@@ -39,17 +43,25 @@ func (server *Server) Start(port int) error {
 // DecodeHTTPHandler will try to extract the bearer token found in the Authorization header of each request and verify it
 func (server *Server) DecodeHTTPHandler(w http.ResponseWriter, r *http.Request) {
 	q, _ := url.ParseQuery(r.URL.RawQuery)
-	fields := log.Fields{
+	successFields := log.Fields{
 		"remote_addr": r.RemoteAddr,
 		"host":        r.Host,
 		"method":      r.Method,
 		"path":        r.URL.Path,
 		"query":       q,
 		"user_agent":  r.UserAgent(),
+		"status":      "200",
 	}
-	successFields := fields
-	errorFields := fields
-	errorFields["status"] = "401"
+	errorFields := log.Fields{
+		"remote_addr": r.RemoteAddr,
+		"host":        r.Host,
+		"method":      r.Method,
+		"path":        r.URL.Path,
+		"query":       q,
+		"user_agent":  r.UserAgent(),
+		"status":      "401",
+	}
+	successLogger := log.WithFields(successFields)
 	errorLogger := log.WithFields(errorFields)
 
 	unauthorized := map[string]string{"code": "unauthorized", "message": "You are not authorized to perform the requested action"}
@@ -58,31 +70,47 @@ func (server *Server) DecodeHTTPHandler(w http.ResponseWriter, r *http.Request) 
 	enableCors(&w)
 	// Enabled PREFLIGHT calls
 	if r.Method == "OPTIONS" {
+		successLogger.Info("CORS Request OK")
 		return
 	}
 
 	// Get the Jwt
-	jwt := r.Header.Get("Authorization")
+	auth := r.Header.Get("Authorization")
+	matched, err := regexp.MatchString(`^Basic*`, auth)
+
+	if matched && AllowBasicAuthPassThrough {
+		auth = strings.Replace(auth, "Basic ", "", 1)
+		payload, _ := base64.StdEncoding.DecodeString(auth)
+		pair := strings.SplitN(string(payload), ":", 2)
+		if len(pair) != 2 {
+			errorLogger.Error("Authorization Failed")
+			http.Error(w, string(error), 401)
+			return
+		}
+		successLogger.Info("Basic Auth Request OK")
+		return
+	}
+
 	query := r.URL.Query()
 	t := query["token"]
 	bt := query["bearer_token"]
 
-	if jwt == "" {
+	if auth == "" {
 		if len(t) < 1 || t[0] == "" {
 			if len(bt) < 1 || bt[0] == "" {
 				errorLogger.Error("Unable to retrieve JWToken from Authorization header or query parameter")
 				http.Error(w, string(error), 401)
 				return
 			}
-			jwt = bt[0]
+			auth = bt[0]
 		} else {
-			jwt = t[0]
+			auth = t[0]
 		}
 	}
 
 	claims := make(map[string]interface{})
-	jwt = strings.Replace(jwt, "Bearer ", "", 1)
-	claims, jwkset, err := token.Decode(jwt, server.JwkSet, JwtIssuer)
+	auth = strings.Replace(auth, "Bearer ", "", 1)
+	claims, jwkset, err := token.Decode(auth, server.JwkSet, JwtIssuer)
 	server.JwkSet = jwkset
 	if err != nil {
 		errorLogger.Error(err.Error())
@@ -119,7 +147,6 @@ func (server *Server) DecodeHTTPHandler(w http.ResponseWriter, r *http.Request) 
 	}
 	marshaledClaims, err := json.Marshal(claims)
 	successFields["claims"] = claims
-	successFields["status"] = "200"
 	log.WithFields(successFields).Info("Authentication Success")
 	w.Header().Set(JwtOutboundHeader, string(marshaledClaims))
 }
