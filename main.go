@@ -25,6 +25,8 @@ var (
 	CheckExp bool
 	// AllowBasicAuthPassThrough control whether basic auth requests get rejected or not
 	AllowBasicAuthPassThrough bool
+	// AllowBasicAuthHeader specifies the header that the basic auth creds are in
+	AllowBasicAuthHeader string
 )
 
 func init() {
@@ -51,6 +53,7 @@ func init() {
 	JwtOutboundHeader = os.Getenv("JWT_OUTBOUND_HEADER")
 	checkExp := os.Getenv("CHECK_EXP")
 	allowBasicAuthPassThrough := os.Getenv("ALLOW_BASIC_AUTH_PASSTHROUGH")
+	AllowBasicAuthHeader := os.Getenv("ALLOW_BASIC_AUTH_HEADER")
 
 	if JwtIssuer == "" {
 		log.Fatal("JWT_ISSUER is empty")
@@ -79,6 +82,7 @@ func init() {
 	httpserver.JwtIssuer = JwtIssuer
 	httpserver.JwtCheckExp = CheckExp
 	httpserver.AllowBasicAuthPassThrough = AllowBasicAuthPassThrough
+	httpserver.AllowBasicAuthHeader = AllowBasicAuthHeader
 	// Optional envs
 	if JwtOutboundHeader != "" {
 		httpserver.JwtOutboundHeader = JwtOutboundHeader

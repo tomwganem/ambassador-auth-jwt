@@ -25,6 +25,8 @@ var (
 	JwtOutboundHeader = "X-JWT-PAYLOAD"
 	// AllowBasicAuthPassThrough will allow requests with a basic auth authorization header to be passed through
 	AllowBasicAuthPassThrough = false
+	// AllowBasicAuthPassHeader specifies the header to extract the basic auth request from
+	AllowBasicAuthPassHeader = "Authorization"
 )
 
 // Server needs to know about the Issuer url to verify tokens against
@@ -74,27 +76,10 @@ func (server *Server) DecodeHTTPHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// Get the Jwt
 	auth := r.Header.Get("Authorization")
-	matched, err := regexp.MatchString(`^Basic*`, auth)
-
-	if matched && AllowBasicAuthPassThrough {
-		auth = strings.Replace(auth, "Basic ", "", 1)
-		payload, _ := base64.StdEncoding.DecodeString(auth)
-		pair := strings.SplitN(string(payload), ":", 2)
-		if len(pair) != 2 {
-			errorLogger.Error("Authorization Failed")
-			http.Error(w, string(error), 401)
-			return
-		}
-		successLogger.Info("Basic Auth Request OK")
-		return
-	}
-
 	query := r.URL.Query()
 	t := query["token"]
 	bt := query["bearer_token"]
-
 	if auth == "" {
 		if len(t) < 1 || t[0] == "" {
 			if len(bt) < 1 || bt[0] == "" {
@@ -174,4 +159,26 @@ func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Headers", "authorization")
 	(*w).Header().Set("Access-Control-Max-Age", "1728000")
 	(*w).Header().Set("Access-Control-Expose-Headers", "")
+}
+
+func basicAuthPassCheck(w http.ResponseWriter, r http.Request, successLogger log.Entry, errorLogger log.Entry, error []byte) {
+	if AllowBasicAuthPassThrough {
+		basicAuth := r.Header.Get(AllowBasicAuthPassHeader)
+		matched, err := regexp.MatchString(`^Basic*`, basicAuth)
+		if matched {
+			basicAuth = strings.Replace(basicAuth, "Basic ", "", 1)
+			payload, _ := base64.StdEncoding.DecodeString(basicAuth)
+			pair := strings.SplitN(string(payload), ":", 2)
+			if len(pair) != 2 {
+				errorLogger.Error("Authorization Failed")
+				http.Error(w, string(error), 401)
+				return
+			}
+			successLogger.Info("Basic Auth Request OK")
+			return
+		}
+		errorLogger.Error(err.Error())
+		http.Error(w, string(error), 401)
+		return
+	}
 }
