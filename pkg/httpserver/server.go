@@ -16,6 +16,18 @@ import (
 	"gopkg.in/square/go-jose.v2"
 )
 
+// Errors is returned in ErrorMsg
+type Errors struct {
+	Code    string `json:"code,omitempty"`
+	Message string `json:"message,omitempty"`
+}
+
+// ErrorMsg is returned on unauthorized requests
+type ErrorMsg struct {
+	StatusCode int      `json:"status_code,omitempty"`
+	Errors     []Errors `json:"errors,omitempty"`
+}
+
 var (
 	// JwtCheckExp will determine if we need to verify if the token is expired or not
 	JwtCheckExp = true
@@ -74,7 +86,16 @@ func (server *Server) DecodeHTTPHandler(w http.ResponseWriter, r *http.Request) 
 	errorLogger := log.WithFields(errorFields)
 	debugLogger := log.WithFields(debugFields)
 
-	unauthorized := map[string]string{"code": "unauthorized", "message": "You are not authorized to perform the requested action"}
+	unauthorized := ErrorMsg{
+		StatusCode: 401,
+		Errors: []Errors{
+			{
+				Code:    "unauthorized",
+				Message: "You are not authorized to perform the requested action",
+			},
+		},
+	}
+
 	error, _ := json.Marshal(unauthorized)
 
 	enableCors(&w)
