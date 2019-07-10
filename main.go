@@ -81,12 +81,12 @@ func init() {
 		log.Fatal("JWT_ISSUER is empty")
 	}
 
-	CheckExp = false
+	CheckExp = true
 	if checkExp != "" {
 		b, err := strconv.ParseBool(checkExp)
 		if err != nil {
-			log.Warn("Unable to convert CHECK_EXP to bool: setting to false")
-			b = false
+			log.Warn("Unable to convert CHECK_EXP to bool: setting to true")
+			b = true
 		}
 		CheckExp = b
 	}
