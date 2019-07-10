@@ -21,7 +21,7 @@ Provide the following environment variables:
 | `CHECK_EXP` | check if the token is expired or not | `true` |
 | `ALLOW_BASIC_AUTH_PASSTHROUGH` | allow basic auth requests, without a token, to pass through  | `false` |
 | `ALLOW_BASIC_AUTH_HEADER` | specify the header that has the basic auth credentials  | `Authorization` |
-| `ALLOW_BASIC_AUTH_PATH` | specify a regex to test the path of the request determine if a basic auth request should be allowed | `^/.*` |
+| `ALLOW_BASIC_AUTH_PATH_REGEX` | specify a regex to test the path of the request determine if a basic auth request should be allowed | `^/.*` |
 
 ## Run on Kubernetes
 
