@@ -25,8 +25,10 @@ var (
 	JwtOutboundHeader = "X-JWT-PAYLOAD"
 	// AllowBasicAuthPassThrough will allow requests with a basic auth authorization header to be passed through
 	AllowBasicAuthPassThrough = false
-	// AllowBasicAuthPassHeader specifies the header to extract the basic auth request from
-	AllowBasicAuthPassHeader = "Authorization"
+	// AllowBasicAuthHeader specifies the header to extract the basic auth request from
+	AllowBasicAuthHeader = "Authorization"
+	// AllowBasicAuthPathRegex allows us to only allow a basic auth pass through for requests with a certain path
+	AllowBasicAuthPathRegex = regexp.MustCompile(`^\/.*`)
 )
 
 // Server needs to know about the Issuer url to verify tokens against
@@ -63,8 +65,14 @@ func (server *Server) DecodeHTTPHandler(w http.ResponseWriter, r *http.Request) 
 		"user_agent":  r.UserAgent(),
 		"status":      "401",
 	}
+	debugFields := log.Fields{
+		"method": r.Method,
+		"path":   r.URL.Path,
+		"query":  q,
+	}
 	successLogger := log.WithFields(successFields)
 	errorLogger := log.WithFields(errorFields)
+	debugLogger := log.WithFields(debugFields)
 
 	unauthorized := map[string]string{"code": "unauthorized", "message": "You are not authorized to perform the requested action"}
 	error, _ := json.Marshal(unauthorized)
@@ -80,10 +88,13 @@ func (server *Server) DecodeHTTPHandler(w http.ResponseWriter, r *http.Request) 
 	query := r.URL.Query()
 	t := query["token"]
 	bt := query["bearer_token"]
-	if auth == "" {
+	basicAuthAllowed, msg := basicAuthPassCheck(r, debugLogger)
+
+	// The following checks for tokens passed as a query parameter
+	if auth == "" && !basicAuthAllowed {
 		if len(t) < 1 || t[0] == "" {
 			if len(bt) < 1 || bt[0] == "" {
-				errorLogger.Error("Unable to retrieve JWToken from Authorization header or query parameter")
+				errorLogger.Warn("Unable to retrieve JWToken from Authorization header or query parameter. " + msg)
 				http.Error(w, string(error), 401)
 				return
 			}
@@ -91,6 +102,10 @@ func (server *Server) DecodeHTTPHandler(w http.ResponseWriter, r *http.Request) 
 		} else {
 			auth = t[0]
 		}
+
+	} else if auth == "" && basicAuthAllowed {
+		log.WithFields(successFields).Info(msg)
+		return
 	}
 
 	claims := make(map[string]interface{})
@@ -161,24 +176,40 @@ func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Expose-Headers", "")
 }
 
-func basicAuthPassCheck(w http.ResponseWriter, r http.Request, successLogger log.Entry, errorLogger log.Entry, error []byte) {
+// basicAuthPassCheck returns a boolean. It will return true if:
+// 1. ALLOW_BASIC_AUTH_PASSTHROUGH is set to true
+// 2. the path of the request matches ALLOW_BASIC_AUTH_PATH_REGEX
+// 3. the value passed in ALLOW_BASIC_AUTH_HEADER looks like a valid basic auth value (i.e. starts with "Basic", can be base64 decoded, can be split into a username:password pair)
+func basicAuthPassCheck(r *http.Request, debugLogger *log.Entry) (bool, string) {
+	basicAuthRegex := regexp.MustCompile(`^Basic\ *`)
+	debugLogger.Debug(fmt.Sprintf("ALLOW_BASIC_AUTH_PASSTHROUGH set to %t", AllowBasicAuthPassThrough))
 	if AllowBasicAuthPassThrough {
-		basicAuth := r.Header.Get(AllowBasicAuthPassHeader)
-		matched, err := regexp.MatchString(`^Basic*`, basicAuth)
-		if matched {
-			basicAuth = strings.Replace(basicAuth, "Basic ", "", 1)
-			payload, _ := base64.StdEncoding.DecodeString(basicAuth)
-			pair := strings.SplitN(string(payload), ":", 2)
-			if len(pair) != 2 {
-				errorLogger.Error("Authorization Failed")
-				http.Error(w, string(error), 401)
-				return
+		debugLogger.Trace(fmt.Sprintf("ALLOW_BASIC_AUTH_PATH_REGEX set to: %s", AllowBasicAuthPathRegex))
+		debugLogger.Trace(fmt.Sprintf("ALLOW_BASIC_AUTH_HEADER set to: %s", AllowBasicAuthHeader))
+		matchedPath := AllowBasicAuthPathRegex.Match([]byte(r.URL.Path))
+		basicAuth := r.Header.Get(AllowBasicAuthHeader)
+		matchedAuth := basicAuthRegex.Match([]byte(basicAuth))
+		if matchedAuth {
+			debugLogger.Trace(fmt.Sprintf("header: %s, does have a value that includes: %s", AllowBasicAuthHeader, basicAuthRegex))
+			if matchedPath {
+				debugLogger.Trace(fmt.Sprintf("request path: %s, correctly matches regex: %s", r.URL.Path, AllowBasicAuthPathRegex))
+				basicAuth = strings.Replace(basicAuth, "Basic ", "", 1)
+				payload, err := base64.StdEncoding.DecodeString(basicAuth)
+				if err != nil {
+					debugLogger.Trace(fmt.Sprintf("basic auth value: %s can not be base64 decoded", basicAuth))
+					return false, "Basic Auth Not Allowed"
+				}
+				pair := strings.SplitN(string(payload), ":", 2)
+				if len(pair) == 2 {
+					return true, "Basic Auth Allowed"
+				}
+				debugLogger.Trace(fmt.Sprintf("decoded basic auth value: %s is unable to be split into a username/password pair", payload))
+			} else {
+				debugLogger.Trace(fmt.Sprintf("request path: %s, does not match regex: %s", r.URL.Path, AllowBasicAuthPathRegex))
 			}
-			successLogger.Info("Basic Auth Request OK")
-			return
+		} else {
+			debugLogger.Trace(fmt.Sprintf("header: %s, does not have value that matches: %s", AllowBasicAuthHeader, basicAuthRegex))
 		}
-		errorLogger.Error(err.Error())
-		http.Error(w, string(error), 401)
-		return
 	}
+	return false, "Basic Auth Not Allowed"
 }

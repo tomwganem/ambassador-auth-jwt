@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -27,6 +28,8 @@ var (
 	AllowBasicAuthPassThrough bool
 	// AllowBasicAuthHeader specifies the header that the basic auth creds are in
 	AllowBasicAuthHeader string
+	// AllowBasicAuthPathRegex specifies the path that basic auth requests are allowed on
+	AllowBasicAuthPathRegex string
 )
 
 func init() {
@@ -68,9 +71,11 @@ func init() {
 
 	JwtIssuer = os.Getenv("JWT_ISSUER")
 	JwtOutboundHeader = os.Getenv("JWT_OUTBOUND_HEADER")
+	AllowBasicAuthHeader := os.Getenv("ALLOW_BASIC_AUTH_HEADER")
+	AllowBasicAuthPathRegex := os.Getenv("ALLOW_BASIC_AUTH_PATH_REGEX")
+
 	checkExp := os.Getenv("CHECK_EXP")
 	allowBasicAuthPassThrough := os.Getenv("ALLOW_BASIC_AUTH_PASSTHROUGH")
-	AllowBasicAuthHeader := os.Getenv("ALLOW_BASIC_AUTH_HEADER")
 
 	if JwtIssuer == "" {
 		log.Fatal("JWT_ISSUER is empty")
@@ -99,8 +104,12 @@ func init() {
 	httpserver.JwtIssuer = JwtIssuer
 	httpserver.JwtCheckExp = CheckExp
 	httpserver.AllowBasicAuthPassThrough = AllowBasicAuthPassThrough
-	httpserver.AllowBasicAuthHeader = AllowBasicAuthHeader
-	// Optional envs
+	if AllowBasicAuthHeader != "" {
+		httpserver.AllowBasicAuthHeader = AllowBasicAuthHeader
+	}
+	if AllowBasicAuthPathRegex != "" {
+		httpserver.AllowBasicAuthPathRegex = regexp.MustCompile(AllowBasicAuthPathRegex)
+	}
 	if JwtOutboundHeader != "" {
 		httpserver.JwtOutboundHeader = JwtOutboundHeader
 	}
