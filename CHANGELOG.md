@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="0.4.0-rc.2"></a>
+# [0.4.0-rc.2](https://github.com/tomwganem/ambassador-auth-jwt/compare/v0.3.0...v0.4.0-rc.2) (2019-07-10)
+
+
+### Bug Fixes
+
+* allow setting log level from environment variable ([c234b3f](https://github.com/tomwganem/ambassador-auth-jwt/commit/c234b3f))
+* delete "sub" key from claims ([e3867ba](https://github.com/tomwganem/ambassador-auth-jwt/commit/e3867ba))
+* go mod tidy ([e28e7cf](https://github.com/tomwganem/ambassador-auth-jwt/commit/e28e7cf))
+* provide backward compatibility in the error msg structure returned ([0831fa7](https://github.com/tomwganem/ambassador-auth-jwt/commit/0831fa7))
+* set CHECK_EXP to true by default ([328763f](https://github.com/tomwganem/ambassador-auth-jwt/commit/328763f))
+
+
+### Features
+
+* allow Basic Auth Requests to be passed through ([f6c5f36](https://github.com/tomwganem/ambassador-auth-jwt/commit/f6c5f36))
+* provide more structured error message ([bcab0f1](https://github.com/tomwganem/ambassador-auth-jwt/commit/bcab0f1))
+* specify header to allow basic auth pass through ([c409aff](https://github.com/tomwganem/ambassador-auth-jwt/commit/c409aff))
+* use golang version 1.12.6 ([8c9c9cb](https://github.com/tomwganem/ambassador-auth-jwt/commit/8c9c9cb))
+* use regex to allow basic auth requests ([87bde66](https://github.com/tomwganem/ambassador-auth-jwt/commit/87bde66))
+
+
+
 <a name="0.4.0-rc.1"></a>
 # [0.4.0-rc.1](https://github.com/tomwganem/ambassador-auth-jwt/compare/v0.3.0...v0.4.0-rc.1) (2019-07-10)
 
