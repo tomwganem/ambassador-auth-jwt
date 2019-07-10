@@ -32,10 +32,27 @@ var (
 func init() {
 	raven.SetDSN(os.Getenv("SENTRY_DSN"))
 	raven.SetEnvironment(os.Getenv("SENTRY_CURRENT_ENV"))
+	switch logLevel := os.Getenv("LOG_LEVEL"); logLevel {
+	case "TRACE":
+		log.SetLevel(log.TraceLevel)
+	case "DEBUG":
+		log.SetLevel(log.DebugLevel)
+	case "INFO":
+		log.SetLevel(log.InfoLevel)
+	case "WARN":
+		log.SetLevel(log.WarnLevel)
+	case "ERROR":
+		log.SetLevel(log.ErrorLevel)
+	case "FATAL":
+		log.SetLevel(log.FatalLevel)
+	case "PANIC":
+		log.SetLevel(log.PanicLevel)
+	default:
+		log.SetLevel(log.InfoLevel)
+	}
 	raven.SetRelease(Version)
 	log.SetFormatter(&log.JSONFormatter{TimestampFormat: time.RFC3339Nano})
 	log.SetOutput(os.Stdout)
-	log.SetLevel(log.InfoLevel)
 	log.WithFields(log.Fields{
 		"version":            Version,
 		"sentry_dsn":         os.Getenv("SENTRY_DSN"),
