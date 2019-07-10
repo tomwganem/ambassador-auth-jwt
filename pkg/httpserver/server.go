@@ -119,8 +119,9 @@ func (server *Server) DecodeHTTPHandler(w http.ResponseWriter, r *http.Request) 
 	}
 	exp := time.Now()
 	if JwtCheckExp {
-		// Make sure the exp is before today...
+		// Checks to see if the there is an "exp" field
 		if _, ok := claims["exp"]; ok != true {
+			// Checks to see if there is an "expires_at" field. Note: "expires_at" doesn't follow the RFC and shouldn't be a field in most JWTokens. It's the same as "exp", except it's in RFC3339.
 			if _, ok := claims["expires_at"]; ok != true {
 				errorLogger.Error(err.Error())
 				http.Error(w, string(error), 401)
@@ -168,6 +169,7 @@ func NewServer(issuer string) *Server {
 	}
 }
 
+// enableCors sets some hardcoded headers for OPTIONS requests. We return all OPTIONS requests with a 200.
 func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 	(*w).Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT, OPTIONS")
