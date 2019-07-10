@@ -14,7 +14,7 @@ import (
 
 var (
 	// Version should correspond to a git tag
-	Version = "0.4.0-rc.2"
+	Version = "0.4.0-rc.3"
 	// ListenPortStr saves the value extracted from the LISTEN_PORT env var
 	ListenPortStr string
 	// ListenPort saves LISTEN_PORT as an integer
