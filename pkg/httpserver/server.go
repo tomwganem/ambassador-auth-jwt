@@ -16,16 +16,16 @@ import (
 	"gopkg.in/square/go-jose.v2"
 )
 
-// Errors is returned in ErrorMsg
-type Errors struct {
+// Error is returned in ErrorMsg
+type Error struct {
 	Code    string `json:"code,omitempty"`
 	Message string `json:"message,omitempty"`
 }
 
 // ErrorMsg is returned on unauthorized requests
 type ErrorMsg struct {
-	StatusCode int      `json:"status_code,omitempty"`
-	Errors     []Errors `json:"errors,omitempty"`
+	StatusCode int     `json:"status_code,omitempty"`
+	Errors     []Error `json:"errors"`
 }
 
 var (
@@ -41,6 +41,8 @@ var (
 	AllowBasicAuthHeader = "Authorization"
 	// AllowBasicAuthPathRegex allows us to only allow a basic auth pass through for requests with a certain path
 	AllowBasicAuthPathRegex = regexp.MustCompile(`^\/.*`)
+	// NewErrorMessageRegex is used to apply new error structure only to specific endpoints (see bcab0f12220b1e26c6dad10ee6aa1825172051ab). This is for backward compatibility.
+	NewErrorMessageRegex = regexp.MustCompile(`^\/.*`)
 )
 
 // Server needs to know about the Issuer url to verify tokens against
@@ -86,9 +88,11 @@ func (server *Server) DecodeHTTPHandler(w http.ResponseWriter, r *http.Request) 
 	errorLogger := log.WithFields(errorFields)
 	debugLogger := log.WithFields(debugFields)
 
-	unauthorized := ErrorMsg{
+	unauthorizedOld := map[string]string{"code": "unauthorized", "message": "You are not authorized to perform the requested action"}
+
+	unauthorizedNew := ErrorMsg{
 		StatusCode: 401,
-		Errors: []Errors{
+		Errors: []Error{
 			{
 				Code:    "unauthorized",
 				Message: "You are not authorized to perform the requested action",
@@ -96,7 +100,13 @@ func (server *Server) DecodeHTTPHandler(w http.ResponseWriter, r *http.Request) 
 		},
 	}
 
-	error, _ := json.Marshal(unauthorized)
+	matchedPath := NewErrorMessageRegex.Match([]byte(r.URL.Path))
+	var error []byte
+	if matchedPath {
+		error, _ = json.Marshal(unauthorizedNew)
+	} else {
+		error, _ = json.Marshal(unauthorizedOld)
+	}
 
 	enableCors(&w)
 	// Enabled PREFLIGHT calls

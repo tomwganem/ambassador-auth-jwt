@@ -30,6 +30,8 @@ var (
 	AllowBasicAuthHeader string
 	// AllowBasicAuthPathRegex specifies the path that basic auth requests are allowed on
 	AllowBasicAuthPathRegex string
+	// NewErrorMessageRegex specifies the paths that we return the new error structure for (needed for backwards compatibility)
+	NewErrorMessageRegex string
 )
 
 func init() {
@@ -73,6 +75,7 @@ func init() {
 	JwtOutboundHeader = os.Getenv("JWT_OUTBOUND_HEADER")
 	AllowBasicAuthHeader := os.Getenv("ALLOW_BASIC_AUTH_HEADER")
 	AllowBasicAuthPathRegex := os.Getenv("ALLOW_BASIC_AUTH_PATH_REGEX")
+	NewErrorMessageRegex := os.Getenv("NEW_ERROR_MESSAGE_REGEX")
 
 	checkExp := os.Getenv("CHECK_EXP")
 	allowBasicAuthPassThrough := os.Getenv("ALLOW_BASIC_AUTH_PASSTHROUGH")
@@ -109,6 +112,9 @@ func init() {
 	}
 	if AllowBasicAuthPathRegex != "" {
 		httpserver.AllowBasicAuthPathRegex = regexp.MustCompile(AllowBasicAuthPathRegex)
+	}
+	if NewErrorMessageRegex != "" {
+		httpserver.NewErrorMessageRegex = regexp.MustCompile(NewErrorMessageRegex)
 	}
 	if JwtOutboundHeader != "" {
 		httpserver.JwtOutboundHeader = JwtOutboundHeader
