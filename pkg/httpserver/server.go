@@ -213,7 +213,7 @@ func enableCors(w *http.ResponseWriter) {
 // 2. the path of the request matches ALLOW_BASIC_AUTH_PATH_REGEX
 // 3. the value passed in ALLOW_BASIC_AUTH_HEADER looks like a valid basic auth value (i.e. starts with "Basic", can be base64 decoded, can be split into a username:password pair)
 func basicAuthPassCheck(r *http.Request, debugLogger *log.Entry) (bool, string) {
-	basicAuthRegex := regexp.MustCompile(`^Basic\ *`)
+	basicAuthRegex := regexp.MustCompile(`^Basic\ .*`)
 	debugLogger.Debug(fmt.Sprintf("ALLOW_BASIC_AUTH_PASSTHROUGH set to %t", AllowBasicAuthPassThrough))
 	if AllowBasicAuthPassThrough {
 		debugLogger.Trace(fmt.Sprintf("ALLOW_BASIC_AUTH_PATH_REGEX set to: %s", AllowBasicAuthPathRegex))
