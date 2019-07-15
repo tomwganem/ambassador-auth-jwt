@@ -157,13 +157,12 @@ func (server *Server) DecodeHTTPHandler(w http.ResponseWriter, r *http.Request) 
 				errorLogger.Error(err.Error())
 				http.Error(w, string(error), 401)
 				return
-			} else {
-				exp, err = time.Parse(time.RFC3339, claims["expires_at"].(string))
-				if err != nil {
-					raven.CaptureError(err, nil)
-					errorLogger.Error(err.Error())
-					http.Error(w, string(error), 500)
-				}
+			}
+			exp, err = time.Parse(time.RFC3339, claims["expires_at"].(string))
+			if err != nil {
+				raven.CaptureError(err, nil)
+				errorLogger.Error(err.Error())
+				http.Error(w, string(error), 500)
 			}
 		} else {
 			exp = time.Unix(int64(claims["exp"].(float64)), 0)
