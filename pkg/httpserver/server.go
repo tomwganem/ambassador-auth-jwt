@@ -43,6 +43,8 @@ var (
 	AllowBasicAuthPathRegex = regexp.MustCompile(`^\/.*`)
 	// NewErrorMessageRegex is used to apply new error structure only to specific endpoints (see bcab0f12220b1e26c6dad10ee6aa1825172051ab). This is for backward compatibility.
 	NewErrorMessageRegex = regexp.MustCompile(`^\/.*`)
+	// BasicAuthRegex is for checking if a basic auth request is formatted correctly
+	BasicAuthRegex = regexp.MustCompile(`^Basic\ .*`)
 )
 
 // Server needs to know about the Issuer url to verify tokens against
@@ -120,7 +122,12 @@ func (server *Server) DecodeHTTPHandler(w http.ResponseWriter, r *http.Request) 
 	t := query["token"]
 	bt := query["bearer_token"]
 	basicAuthAllowed, msg := basicAuthPassCheck(r, debugLogger)
-
+	matchedAuth := BasicAuthRegex.Match([]byte(auth))
+	// Allows basic auth credentials in the Authorization header to be passed through
+	if matchedAuth && basicAuthAllowed {
+		successLogger.Info(msg)
+		return
+	}
 	// The following checks for tokens passed as a query parameter
 	if auth == "" && !basicAuthAllowed {
 		if len(t) < 1 || t[0] == "" {
@@ -213,16 +220,15 @@ func enableCors(w *http.ResponseWriter) {
 // 2. the path of the request matches ALLOW_BASIC_AUTH_PATH_REGEX
 // 3. the value passed in ALLOW_BASIC_AUTH_HEADER looks like a valid basic auth value (i.e. starts with "Basic", can be base64 decoded, can be split into a username:password pair)
 func basicAuthPassCheck(r *http.Request, debugLogger *log.Entry) (bool, string) {
-	basicAuthRegex := regexp.MustCompile(`^Basic\ .*`)
 	debugLogger.Debug(fmt.Sprintf("ALLOW_BASIC_AUTH_PASSTHROUGH set to %t", AllowBasicAuthPassThrough))
 	if AllowBasicAuthPassThrough {
 		debugLogger.Trace(fmt.Sprintf("ALLOW_BASIC_AUTH_PATH_REGEX set to: %s", AllowBasicAuthPathRegex))
 		debugLogger.Trace(fmt.Sprintf("ALLOW_BASIC_AUTH_HEADER set to: %s", AllowBasicAuthHeader))
 		matchedPath := AllowBasicAuthPathRegex.Match([]byte(r.URL.Path))
 		basicAuth := r.Header.Get(AllowBasicAuthHeader)
-		matchedAuth := basicAuthRegex.Match([]byte(basicAuth))
+		matchedAuth := BasicAuthRegex.Match([]byte(basicAuth))
 		if matchedAuth {
-			debugLogger.Trace(fmt.Sprintf("header: %s, does have a value that includes: %s", AllowBasicAuthHeader, basicAuthRegex))
+			debugLogger.Trace(fmt.Sprintf("header: %s, does have a value that includes: %s", AllowBasicAuthHeader, BasicAuthRegex))
 			if matchedPath {
 				debugLogger.Trace(fmt.Sprintf("request path: %s, correctly matches regex: %s", r.URL.Path, AllowBasicAuthPathRegex))
 				basicAuth = strings.Replace(basicAuth, "Basic ", "", 1)
@@ -240,7 +246,7 @@ func basicAuthPassCheck(r *http.Request, debugLogger *log.Entry) (bool, string) 
 				debugLogger.Trace(fmt.Sprintf("request path: %s, does not match regex: %s", r.URL.Path, AllowBasicAuthPathRegex))
 			}
 		} else {
-			debugLogger.Trace(fmt.Sprintf("header: %s, does not have value that matches: %s", AllowBasicAuthHeader, basicAuthRegex))
+			debugLogger.Trace(fmt.Sprintf("header: %s, does not have value that matches: %s", AllowBasicAuthHeader, BasicAuthRegex))
 		}
 	}
 	return false, "Basic Auth Not Allowed"
