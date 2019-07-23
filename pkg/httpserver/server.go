@@ -37,8 +37,8 @@ var (
 	JwtOutboundHeader = "X-JWT-PAYLOAD"
 	// AllowBasicAuthPassThrough will allow requests with a basic auth authorization header to be passed through
 	AllowBasicAuthPassThrough = false
-	// AllowBasicAuthHeader specifies the header to extract the basic auth request from
-	AllowBasicAuthHeader = "Authorization"
+	// AllowBasicAuthHeaders specifies the header to extract the basic auth request from
+	AllowBasicAuthHeaders = []string{"Authorization"}
 	// AllowBasicAuthPathRegex allows us to only allow a basic auth pass through for requests with a certain path
 	AllowBasicAuthPathRegex = regexp.MustCompile(`^\/.*`)
 	// NewErrorMessageRegex is used to apply new error structure only to specific endpoints (see bcab0f12220b1e26c6dad10ee6aa1825172051ab). This is for backward compatibility.
@@ -218,36 +218,48 @@ func enableCors(w *http.ResponseWriter) {
 // basicAuthPassCheck returns a boolean. It will return true if:
 // 1. ALLOW_BASIC_AUTH_PASSTHROUGH is set to true
 // 2. the path of the request matches ALLOW_BASIC_AUTH_PATH_REGEX
-// 3. the value passed in ALLOW_BASIC_AUTH_HEADER looks like a valid basic auth value (i.e. starts with "Basic", can be base64 decoded, can be split into a username:password pair)
+// 3. the value passed in ALLOW_BASIC_AUTH_HEADERS looks like a valid basic auth value (i.e. starts with "Basic", can be base64 decoded, can be split into a username:password pair)
 func basicAuthPassCheck(r *http.Request, debugLogger *log.Entry) (bool, string) {
-	debugLogger.Debug(fmt.Sprintf("ALLOW_BASIC_AUTH_PASSTHROUGH set to %t", AllowBasicAuthPassThrough))
+	debugLogger.Trace(fmt.Sprintf("ALLOW_BASIC_AUTH_PASSTHROUGH set to %t", AllowBasicAuthPassThrough))
 	if AllowBasicAuthPassThrough {
-		debugLogger.Trace(fmt.Sprintf("ALLOW_BASIC_AUTH_PATH_REGEX set to: %s", AllowBasicAuthPathRegex))
-		debugLogger.Trace(fmt.Sprintf("ALLOW_BASIC_AUTH_HEADER set to: %s", AllowBasicAuthHeader))
-		matchedPath := AllowBasicAuthPathRegex.Match([]byte(r.URL.Path))
-		basicAuth := r.Header.Get(AllowBasicAuthHeader)
-		matchedAuth := BasicAuthRegex.Match([]byte(basicAuth))
-		if matchedAuth {
-			debugLogger.Trace(fmt.Sprintf("header: %s, does have a value that includes: %s", AllowBasicAuthHeader, BasicAuthRegex))
-			if matchedPath {
-				debugLogger.Trace(fmt.Sprintf("request path: %s, correctly matches regex: %s", r.URL.Path, AllowBasicAuthPathRegex))
-				basicAuth = strings.Replace(basicAuth, "Basic ", "", 1)
-				payload, err := base64.StdEncoding.DecodeString(basicAuth)
-				if err != nil {
-					debugLogger.Trace(fmt.Sprintf("basic auth value: %s can not be base64 decoded", basicAuth))
-					return false, "Basic Auth Not Allowed"
-				}
-				pair := strings.SplitN(string(payload), ":", 2)
-				if len(pair) == 2 {
-					return true, "Basic Auth Allowed"
-				}
-				debugLogger.Trace(fmt.Sprintf("decoded basic auth value: %s is unable to be split into a username/password pair", payload))
-			} else {
-				debugLogger.Trace(fmt.Sprintf("request path: %s, does not match regex: %s", r.URL.Path, AllowBasicAuthPathRegex))
+		debugLogger.Trace(fmt.Sprintf("ALLOW_BASIC_AUTH_HEADERS have values: %v", AllowBasicAuthHeaders))
+		for _, header := range AllowBasicAuthHeaders {
+			b, msg := basicAuthHeaderCheck(header, r, debugLogger)
+			if b {
+				return b, msg
 			}
-		} else {
-			debugLogger.Trace(fmt.Sprintf("header: %s, does not have value that matches: %s", AllowBasicAuthHeader, BasicAuthRegex))
 		}
+	}
+	return false, "Basic Auth Not Allowed"
+}
+
+func basicAuthHeaderCheck(header string, r *http.Request, debugLogger *log.Entry) (bool, string) {
+	debugLogger.Trace(fmt.Sprintf("Checking value in header: %s", header))
+	path := r.URL.Path
+	debugLogger.Trace(fmt.Sprintf("ALLOW_BASIC_AUTH_PATH_REGEX set to: %s", AllowBasicAuthPathRegex))
+	matchedPath := AllowBasicAuthPathRegex.Match([]byte(path))
+	basicAuth := r.Header.Get(header)
+	matchedAuth := BasicAuthRegex.Match([]byte(basicAuth))
+	if matchedAuth {
+		debugLogger.Trace(fmt.Sprintf("header: %s, does have a value that includes: %s", header, BasicAuthRegex))
+		if matchedPath {
+			debugLogger.Trace(fmt.Sprintf("request path: %s, correctly matches regex: %s", path, AllowBasicAuthPathRegex))
+			basicAuth = strings.Replace(basicAuth, "Basic ", "", 1)
+			payload, err := base64.StdEncoding.DecodeString(basicAuth)
+			if err != nil {
+				debugLogger.Trace(fmt.Sprintf("basic auth value: %s can not be base64 decoded", basicAuth))
+				return false, "Basic Auth Not Allowed"
+			}
+			pair := strings.SplitN(string(payload), ":", 2)
+			if len(pair) == 2 {
+				return true, "Basic Auth Allowed"
+			}
+			debugLogger.Trace(fmt.Sprintf("decoded basic auth value: %s is unable to be split into a username/password pair", payload))
+		} else {
+			debugLogger.Trace(fmt.Sprintf("request path: %s, does not match regex: %s", path, AllowBasicAuthPathRegex))
+		}
+	} else {
+		debugLogger.Trace(fmt.Sprintf("header: %s, does not have value that matches: %s", header, BasicAuthRegex))
 	}
 	return false, "Basic Auth Not Allowed"
 }

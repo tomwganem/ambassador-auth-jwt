@@ -4,6 +4,7 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	raven "github.com/getsentry/raven-go"
@@ -27,7 +28,7 @@ var (
 	// AllowBasicAuthPassThrough control whether basic auth requests get rejected or not
 	AllowBasicAuthPassThrough bool
 	// AllowBasicAuthHeader specifies the header that the basic auth creds are in
-	AllowBasicAuthHeader string
+	AllowBasicAuthHeaders string
 	// AllowBasicAuthPathRegex specifies the path that basic auth requests are allowed on
 	AllowBasicAuthPathRegex string
 	// NewErrorMessageRegex specifies the paths that we return the new error structure for (needed for backwards compatibility)
@@ -73,7 +74,7 @@ func init() {
 
 	JwtIssuer = os.Getenv("JWT_ISSUER")
 	JwtOutboundHeader = os.Getenv("JWT_OUTBOUND_HEADER")
-	AllowBasicAuthHeader := os.Getenv("ALLOW_BASIC_AUTH_HEADER")
+	AllowBasicAuthHeaders := os.Getenv("ALLOW_BASIC_AUTH_HEADERS")
 	AllowBasicAuthPathRegex := os.Getenv("ALLOW_BASIC_AUTH_PATH_REGEX")
 	NewErrorMessageRegex := os.Getenv("NEW_ERROR_MESSAGE_REGEX")
 
@@ -107,8 +108,8 @@ func init() {
 	httpserver.JwtIssuer = JwtIssuer
 	httpserver.JwtCheckExp = CheckExp
 	httpserver.AllowBasicAuthPassThrough = AllowBasicAuthPassThrough
-	if AllowBasicAuthHeader != "" {
-		httpserver.AllowBasicAuthHeader = AllowBasicAuthHeader
+	if AllowBasicAuthHeaders != "" {
+		httpserver.AllowBasicAuthHeaders = strings.Split(AllowBasicAuthHeaders, ",")
 	}
 	if AllowBasicAuthPathRegex != "" {
 		httpserver.AllowBasicAuthPathRegex = regexp.MustCompile(AllowBasicAuthPathRegex)

@@ -20,7 +20,7 @@ Provide the following environment variables:
 | `JWT_OUTBOUND_HEADER` | The name of the header to put the decoded payload in | `X-JWT-PAYLOAD` |
 | `CHECK_EXP` | check if the token is expired or not | `true` |
 | `ALLOW_BASIC_AUTH_PASSTHROUGH` | allow basic auth requests, without a token, to pass through  | `false` |
-| `ALLOW_BASIC_AUTH_HEADER` | specify the header that has the basic auth credentials  | `Authorization` |
+| `ALLOW_BASIC_AUTH_HEADERS` | comma separated list of headers that could have basic auth credentials  | `Authorization` |
 | `ALLOW_BASIC_AUTH_PATH_REGEX` | specify a regex to test the path of the request determine if a basic auth request should be allowed | `^/.*` |
 
 ## Run on Kubernetes
