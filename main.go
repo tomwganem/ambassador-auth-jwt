@@ -27,7 +27,7 @@ var (
 	CheckExp bool
 	// AllowBasicAuthPassThrough control whether basic auth requests get rejected or not
 	AllowBasicAuthPassThrough bool
-	// AllowBasicAuthHeader specifies the header that the basic auth creds are in
+	// AllowBasicAuthHeaders specifies the header that the basic auth creds are in
 	AllowBasicAuthHeaders string
 	// AllowBasicAuthPathRegex specifies the path that basic auth requests are allowed on
 	AllowBasicAuthPathRegex string
