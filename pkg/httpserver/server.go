@@ -197,6 +197,7 @@ func NewServer(issuer string) *Server {
 		log.WithFields(log.Fields{
 			"keyset": jwks,
 			"issuer": issuer,
+			"err":    err,
 		}).Fatal("Unable to retrieve keyset")
 	}
 

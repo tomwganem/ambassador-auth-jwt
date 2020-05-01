@@ -54,6 +54,7 @@ func Decode(jwtoken string, jwkset jose.JSONWebKeySet, issuer string) (map[strin
 			raven.CaptureErrorAndWait(err, nil)
 			log.WithFields(log.Fields{
 				"issuer": issuer,
+				"err":    err,
 			}).Fatal("Unable to update keyset")
 		}
 		log.WithFields(log.Fields{

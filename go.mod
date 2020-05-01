@@ -1,5 +1,7 @@
 module github.com/tomwganem/ambassador-auth-jwt
 
+go 1.14
+
 require (
 	github.com/certifi/gocertifi v0.0.0-20190105021004-abcd57078448 // indirect
 	github.com/getsentry/raven-go v0.2.0
