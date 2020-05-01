@@ -1,16 +1,8 @@
 include:
-  - project: devops/gitlab-ci-common
-    ref: master
-    file: /public/_variables.yml
-  - project: devops/gitlab-ci-common
-    ref: master
-    file: /public/_commitlint.yml
-  - project: devops/gitlab-ci-common
-    ref: master
-    file: /public/_bump.yml
-  - project: devops/gitlab-ci-common
-    ref: master
-    file: /public/test/go.yml
+  - https://devops.gitlab.aspera.us/gitlab-ci-common/_variables.yml
+  - https://devops.gitlab.aspera.us/gitlab-ci-common/_commitlint.yml
+  - https://devops.gitlab.aspera.us/gitlab-ci-common/_bump.yml
+  - https://devops.gitlab.aspera.us/gitlab-ci-common/test/go.yml
 
 .test_template:
   variables:
