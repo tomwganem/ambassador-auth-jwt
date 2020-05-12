@@ -32,7 +32,9 @@ var (
 	// JwtCheckExp will determine if we need to verify if the token is expired or not
 	JwtCheckExp = true
 	// JwtIssuer is the url where we can retrieve a set of public keys to verify rsa based tokens with
-	JwtIssuer = "http://localhost/.well-known/jwks.json"
+	JwtIssuer = map[string]string{
+		"default": "http://localhost/.well-known/jwks.json",
+	}
 	// JwtOutboundHeader is the name of header the parsed token claims will be inserted into
 	JwtOutboundHeader = "X-JWT-PAYLOAD"
 	// AllowBasicAuthPassThrough will allow requests with a basic auth authorization header to be passed through
@@ -49,8 +51,7 @@ var (
 
 // Server needs to know about the Issuer url to verify tokens against
 type Server struct {
-	Issuer string
-	JwkSet jose.JSONWebKeySet
+	IssuerJwkSetMap map[string]jose.JSONWebKeySet
 }
 
 // Start accepting requests and decoding Authorization headers
@@ -148,8 +149,14 @@ func (server *Server) DecodeHTTPHandler(w http.ResponseWriter, r *http.Request) 
 
 	claims := make(map[string]interface{})
 	auth = strings.Replace(auth, "Bearer ", "", 1)
-	claims, jwkset, err := token.Decode(auth, server.JwkSet, JwtIssuer)
-	server.JwkSet = jwkset
+	found,issuer := getJwtIssuer(r)
+	if !found {
+		errorLogger.Error("Could not find jwt issuer for path " + r.URL.Path)
+		http.Error(w, string(error), 401)
+		return
+	}
+	claims, jwkset, err := token.Decode(auth, server.IssuerJwkSetMap[issuer], issuer)
+	server.IssuerJwkSetMap[issuer] = jwkset
 	if err != nil {
 		errorLogger.Error(err.Error())
 		http.Error(w, string(error), 401)
@@ -190,20 +197,18 @@ func (server *Server) DecodeHTTPHandler(w http.ResponseWriter, r *http.Request) 
 }
 
 // NewServer creates a new Server object with the jwkset retrieved from the issuer
-func NewServer(issuer string) *Server {
-	jwks, err := token.JwkSetGet(issuer)
+func NewServer(issuers []string) *Server {
+	jwks, err := token.JwkSetGetMap(issuers)
 	if err != nil {
 		raven.CaptureErrorAndWait(err, nil)
 		log.WithFields(log.Fields{
-			"keyset": jwks,
-			"issuer": issuer,
+			"issuerJwkSetMap": jwks,
 			"err":    err,
 		}).Fatal("Unable to retrieve keyset")
 	}
 
 	return &Server{
-		Issuer: issuer,
-		JwkSet: jwks,
+		IssuerJwkSetMap: jwks,
 	}
 }
 
@@ -263,4 +268,14 @@ func basicAuthHeaderCheck(header string, r *http.Request, debugLogger *log.Entry
 		debugLogger.Trace(fmt.Sprintf("header: %s, does not have value that matches: %s", header, BasicAuthRegex))
 	}
 	return false, "Basic Auth Not Allowed"
+}
+
+func getJwtIssuer(r *http.Request) (bool,string) {
+	 path := r.URL.Path
+	 for jwt_path, issuer := range JwtIssuer {
+		 if (strings.Contains(path, jwt_path)) {
+			 return true,issuer
+		 }
+	 }
+	 return false,"Path not found in jwt keys"
 }

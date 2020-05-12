@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"encoding/json"
 
 	raven "github.com/getsentry/raven-go"
 	log "github.com/sirupsen/logrus"
@@ -20,7 +21,7 @@ var (
 	// ListenPort saves LISTEN_PORT as an integer
 	ListenPort int
 	// JwtIssuer is set by the JWT_ISSUER env variable. It saves the url where the JWKeyset is found
-	JwtIssuer string
+	JwtIssuer map[string]string
 	// JwtOutboundHeader defaults to X-JWT-PAYLOAD and is returned in the response
 	JwtOutboundHeader string
 	// CheckExp is a simple flag to check whether tokens are expired
@@ -72,7 +73,12 @@ func init() {
 		ListenPort = 3000
 	}
 
-	JwtIssuer = os.Getenv("JWT_ISSUER")
+	err = json.Unmarshal([]byte(os.Getenv("JWT_ISSUER")), &JwtIssuer)
+	if err != nil {
+		log.Fatal("Could not parse JWT_ISSUER ")
+	}
+
+	//JwtIssuer = tempJwtIssuer.(map[string]string)
 	JwtOutboundHeader = os.Getenv("JWT_OUTBOUND_HEADER")
 	AllowBasicAuthHeaders := os.Getenv("ALLOW_BASIC_AUTH_HEADERS")
 	AllowBasicAuthPathRegex := os.Getenv("ALLOW_BASIC_AUTH_PATH_REGEX")
@@ -80,10 +86,6 @@ func init() {
 
 	checkExp := os.Getenv("CHECK_EXP")
 	allowBasicAuthPassThrough := os.Getenv("ALLOW_BASIC_AUTH_PASSTHROUGH")
-
-	if JwtIssuer == "" {
-		log.Fatal("JWT_ISSUER is empty")
-	}
 
 	CheckExp = true
 	if checkExp != "" {
@@ -123,6 +125,10 @@ func init() {
 }
 
 func main() {
-	server := httpserver.NewServer(JwtIssuer)
+	issuers := make([]string, 0, len(JwtIssuer))
+	for _,issuer := range JwtIssuer {
+	    issuers = append(issuers, issuer)
+	}
+	server := httpserver.NewServer(issuers)
 	log.Fatal(server.Start(ListenPort))
 }

@@ -32,6 +32,29 @@ func JwkSetGet(issuer string) (jose.JSONWebKeySet, error) {
 	return keyset, nil
 }
 
+// Initialize issuer with its jwk set
+func JwkSetGetMap(issuers []string) (map[string]jose.JSONWebKeySet, error) {
+	keysetIssuerMap := make(map[string]jose.JSONWebKeySet)
+	for _, issuer := range issuers {
+		keyset := jose.JSONWebKeySet{}
+		resp, err := http.Get(issuer)
+		if err != nil {
+			return keysetIssuerMap, err
+		}
+		defer resp.Body.Close()
+		if err := json.NewDecoder(resp.Body).Decode(&keyset); err != nil && err != io.EOF {
+			return keysetIssuerMap, err
+		}
+		log.WithFields(log.Fields{
+			"keyset": keyset,
+			"issuer": issuer,
+		}).Info("Retreiving Keyset")
+		keysetIssuerMap[issuer] = keyset
+	}
+	return keysetIssuerMap, nil
+}
+
+
 // Decode the raw token and validate it with a JWK Set.
 func Decode(jwtoken string, jwkset jose.JSONWebKeySet, issuer string) (map[string]interface{}, jose.JSONWebKeySet, error) {
 	claims := struct {
