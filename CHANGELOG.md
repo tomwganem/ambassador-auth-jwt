@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.2-rc.0](https://github.com/tomwganem/ambassador-auth-jwt/compare/v0.4.1...v0.4.2-rc.0) (2020-05-13)
+
+
+### Features
+
+* **OPSENG-985:** supporting multiple jwt issuers ([6a38a67](https://github.com/tomwganem/ambassador-auth-jwt/commit/6a38a679688c2168e73534c04633cb7e2ee65202))
+
 ### [0.4.1](https://github.com/tomwganem/ambassador-auth-jwt/compare/v0.4.0...v0.4.1) (2020-05-01)
 
 <a name="0.4.0"></a>
