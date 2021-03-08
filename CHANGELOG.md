@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.2](https://github.com/tomwganem/ambassador-auth-jwt/compare/v0.4.1...v0.4.2) (2021-03-08)
+
+
+### Features
+
+* distroless ([5b1a804](https://github.com/tomwganem/ambassador-auth-jwt/commit/5b1a8048457d2119bae3b7a6c17f784f3c50c450))
+
 ### [0.4.1](https://github.com/tomwganem/ambassador-auth-jwt/compare/v0.4.0...v0.4.1) (2020-05-01)
 
 <a name="0.4.0"></a>
