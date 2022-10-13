@@ -28,7 +28,7 @@ func JwkSetGet(issuer string) (jose.JSONWebKeySet, error) {
 	log.WithFields(log.Fields{
 		"keyset": keyset,
 		"issuer": issuer,
-	}).Info("Retreiving Keyset")
+	}).Info("Retrieving Keyset")
 	return keyset, nil
 }
 
@@ -48,12 +48,11 @@ func JwkSetGetMap(issuers []string) (map[string]jose.JSONWebKeySet, error) {
 		log.WithFields(log.Fields{
 			"keyset": keyset,
 			"issuer": issuer,
-		}).Info("Retreiving Keyset")
+		}).Info("Retrieving Keyset")
 		keysetIssuerMap[issuer] = keyset
 	}
 	return keysetIssuerMap, nil
 }
-
 
 // Decode the raw token and validate it with a JWK Set.
 func Decode(jwtoken string, jwkset jose.JSONWebKeySet, issuer string) (map[string]interface{}, jose.JSONWebKeySet, error) {

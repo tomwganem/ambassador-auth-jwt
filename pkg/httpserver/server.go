@@ -149,7 +149,7 @@ func (server *Server) DecodeHTTPHandler(w http.ResponseWriter, r *http.Request) 
 
 	claims := make(map[string]interface{})
 	auth = strings.Replace(auth, "Bearer ", "", 1)
-	found,issuer := getJwtIssuer(r)
+	found, issuer := getJwtIssuer(r)
 	if !found {
 		errorLogger.Error("Could not find jwt issuer for path " + r.URL.Path)
 		http.Error(w, string(error), 401)
@@ -203,7 +203,7 @@ func NewServer(issuers []string) *Server {
 		raven.CaptureErrorAndWait(err, nil)
 		log.WithFields(log.Fields{
 			"issuerJwkSetMap": jwks,
-			"err":    err,
+			"err":             err,
 		}).Fatal("Unable to retrieve keyset")
 	}
 
@@ -270,12 +270,12 @@ func basicAuthHeaderCheck(header string, r *http.Request, debugLogger *log.Entry
 	return false, "Basic Auth Not Allowed"
 }
 
-func getJwtIssuer(r *http.Request) (bool,string) {
-	 path := r.URL.Path
-	 for jwt_path, issuer := range JwtIssuer {
-		 if (strings.Contains(path, jwt_path)) {
-			 return true,issuer
-		 }
-	 }
-	 return false,"Path not found in jwt keys"
+func getJwtIssuer(r *http.Request) (bool, string) {
+	path := r.URL.Path
+	for jwt_path, issuer := range JwtIssuer {
+		if strings.Contains(path, jwt_path) {
+			return true, issuer
+		}
+	}
+	return false, "Path not found in jwt keys"
 }

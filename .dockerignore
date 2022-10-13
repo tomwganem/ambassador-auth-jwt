@@ -7,3 +7,5 @@ coverage.*
 .gitlab-ci.yml
 README.md
 Dockerfile
+.vscode
+.npmrc

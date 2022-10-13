@@ -1,12 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
-	"encoding/json"
 
 	raven "github.com/getsentry/raven-go"
 	log "github.com/sirupsen/logrus"
@@ -126,8 +126,8 @@ func init() {
 
 func main() {
 	issuers := make([]string, 0, len(JwtIssuer))
-	for _,issuer := range JwtIssuer {
-	    issuers = append(issuers, issuer)
+	for _, issuer := range JwtIssuer {
+		issuers = append(issuers, issuer)
 	}
 	server := httpserver.NewServer(issuers)
 	log.Fatal(server.Start(ListenPort))
